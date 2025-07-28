@@ -30,7 +30,7 @@ const UserForm = ({ onUserCreated }) => {
 
   return (
     <div>
-      <h2>Add New User</h2>
+      <h2>Add New Users</h2>
       <form onSubmit={handleSubmit} data-testid="user-form">
         <div className="form-group">
           <label htmlFor="name">Name:</label>
