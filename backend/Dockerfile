@@ -1,7 +1,7 @@
 FROM node:20-alpine
 
 # Install security updates
-RUN apk --no-cache add dumb-init
+#RUN apk --no-cache add dumb-init
 
 # Create app directory with proper permissions
 WORKDIR /app
