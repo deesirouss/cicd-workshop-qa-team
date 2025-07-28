@@ -2,7 +2,7 @@ name: Backend Deployment
 on:
   push:
     branches:
-        - team3-Nikesh
+        - team3-nikesh
 
 
 jobs:
