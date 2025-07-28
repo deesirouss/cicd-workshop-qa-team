@@ -33,6 +33,6 @@ jobs:
         aws-region: us-east-1
 
     - name: Copy to s3
-      run: aws s3 sync frontend/build/ s3://team2-cicdws-bucket/lasata/ 
+      run: aws s3 sync frontend/build/ ${{ secrets.AWS_S3_BUCKET_URI }} --delete
 
 
