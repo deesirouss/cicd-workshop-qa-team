@@ -37,7 +37,7 @@ jobs:
     - name: Deploy to S3
       run: |
         cd frontend
-        aws s3 sync build/ s3://team6-cicdws-bucket --delete --acl public-read
+        aws s3 sync build/ s3://team6-cicdws-bucket --delete
 
     - name: Invalidate CloudFront cache
       run: |
