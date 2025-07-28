@@ -10,8 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Setup Node.js 20
       uses: actions/setup-node@v3
@@ -19,13 +18,17 @@ jobs:
         node-version: '20'
 
     - name: Install dependencies
-      run: npm install
+      run: |
+          cd cicd-workshop-qa-team/frontend
+          npm install
       
     - name: Install dependencies
       run: npm ci
 
     - name: Build project
-      run: npm run build
+      run: |
+          cd cicd-workshop-qa-team/frontend
+          npm run build
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v2
