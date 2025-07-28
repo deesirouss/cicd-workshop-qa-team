@@ -19,7 +19,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-          cd cicd-workshop-qa-team/frontend
+          cd frontend
           npm install
       
     - name: Install dependencies
@@ -27,7 +27,7 @@ jobs:
 
     - name: Build project
       run: |
-          cd cicd-workshop-qa-team/frontend
+          cd frontend
           npm run build
 
     - name: Configure AWS credentials
