@@ -1,6 +1,6 @@
 # CICD Workshop
 
-A comprehensive CI/CD workshop demonstrating best practices with React frontend, Node.js backend, and automated testing.
+A comprehensive CI/CD workshop demonstrating best practices with React frontend, Node.js backend, and automated testing.s
 
 ## Architecture
 
