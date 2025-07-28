@@ -15,3 +15,4 @@ aws s3 sync build/ s3://$S3_BUCKET_NAME --delete
 
 # Invalidate CloudFront cache
 aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_DISTRIBUTION_ID --paths "/*"
+##
