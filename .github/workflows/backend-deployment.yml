@@ -2,7 +2,7 @@ name: Backend Deployment
 on:
   push:
     branches:
-      - team1-bibek
+      - team1-aashish
 
 jobs:
   deploy:
