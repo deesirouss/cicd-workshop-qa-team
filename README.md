@@ -139,7 +139,7 @@ PORT=3001
 NODE_ENV=development
 DATABASE_URL=postgresql://cicd_user:cicd_password@localhost:5432/cicd_workshop
 ```
-
+s
 ### Frontend
 ```
 REACT_APP_API_URL=http://localhost:3001/api
