@@ -1,15 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Starting Frontend Docker Deployment..."
-
-# Login to ECR
-echo "🔐 Logging into AWS ECR..."
-aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$ECR_REGISTRY"
-
-# Get branch name
-branch_name="${GITHUB_REF#refs/heads/}"
-echo "🌿 Branch name: $branch_name"
+echo "🚀 Starting Frontend Deployment to S3..."
 
 # Navigate to frontend directory
 echo "📁 Navigating to frontend directory..."
@@ -21,16 +13,28 @@ if [[ ! -f "package.json" ]]; then
     exit 1
 fi
 
-# Build Frontend Docker Image
-echo "🐳 Building Docker image..."
-docker build -t "$ECR_REGISTRY/$ECR_FRONTEND_REPOSITORY:$branch_name-latest" .
+# Install dependencies
+echo "📦 Installing dependencies..."
+npm ci
 
-# Push Frontend Docker Image to ECR
-echo "📤 Pushing image to ECR..."
-docker push "$ECR_REGISTRY/$ECR_FRONTEND_REPOSITORY:$branch_name-latest"
+# Build React application
+echo "� Building React application..."
+npm run build
 
-# Deploy to ECS or EC2 (depending on your infrastructure)
-echo "🚀 Triggering frontend deployment..."
-# Add your specific deployment commands here
+# Verify build directory exists
+if [[ ! -d "build" ]]; then
+    echo "❌ Error: Build directory not found"
+    exit 1
+fi
 
-echo "✅ Frontend Docker deployment completed successfully!"
+# Deploy to S3
+echo "📤 Deploying to S3 bucket: $S3_BUCKET_NAME"
+aws s3 sync build/ s3://"$S3_BUCKET_NAME"/ --delete
+
+# Invalidate CloudFront cache
+echo "� Invalidating CloudFront cache..."
+aws cloudfront create-invalidation \
+    --distribution-id "$CLOUDFRONT_DISTRIBUTION_ID" \
+    --paths "/*"
+
+echo "✅ Frontend deployment completed successfully!"
