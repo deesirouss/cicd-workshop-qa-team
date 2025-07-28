@@ -21,7 +21,9 @@ jobs:
         cd frontend
         npm install
     - name: bulid Frontend
-      run: npm bulid
+      run: |
+        cd frontend
+        npm bulid
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
