@@ -45,11 +45,13 @@ jobs:
       run: aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
 
     - name: Wait for deployment to be ready
+      env:
+        FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
       run: |
         echo "⏳ Waiting for CloudFront invalidation to complete..."
         echo "🔍 Testing frontend availability..."
         for i in {1..10}; do
-          if curl -s -f "${{ secrets.FRONTEND_URL }}" > /dev/null; then
+          if curl -s -f "${FRONTEND_URL}" > /dev/null; then
             echo "✅ Frontend is accessible!"
             break
           fi
@@ -65,7 +67,7 @@ jobs:
       working-directory: ./e2e-tests
       run: npm run cy:run
       env:
-        CYPRESS_BASE_URL: ${{ secrets.FRONTEND_URL }}
+        CYPRESS_BASE_URL: ${{ env.FRONTEND_URL }}
         CYPRESS_API_URL: ${{ secrets.BACKEND_API_URL }}
 
     - name: Upload Cypress Screenshots
