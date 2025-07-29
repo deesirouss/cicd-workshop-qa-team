@@ -10,7 +10,13 @@ name: Cypress Tests
 on:
   push:
     branches:
-      - team6-sufi
+      - main
+      - 'team6-sufi'  
+      
+  pull_request:
+    branches:
+      - main
+      - 'team6-sufi'
 
 jobs:
   test:
@@ -40,10 +46,22 @@ jobs:
         working-directory: ./e2e-tests
         run: npx cypress run
 
-      - name: Notify Slack on Failure
-        if: failure()
+      - name: Notify Slack on Success
+        if: success()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
           curl -X POST -H 'Content-type: application/json' \
-          --data '{
-            "text": "🚨 Cypress Tests Failed on branch `${{ github.ref_name }}`.\nWorkflow: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View logs>"
-          }' ${{ secrets.SLACK_WEBHOOK_URL }}
+          --data "$(jq -n --arg text "✅ Cypress Tests Passed on branch \`${{ github.ref_name }}\`.\nWorkflow: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View logs>" '{text: $text}')" \
+          "$SLACK_WEBHOOK_URL"
+
+      - name: Notify Slack on Failure
+        if: failure()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+          --data "$(jq -n --arg text "🚨 Cypress Tests Failed on branch \`${{ github.ref_name }}\`.\nWorkflow: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View logs>" '{text: $text}')" \
+          "$SLACK_WEBHOOK_URL"
+
+  
