@@ -2,7 +2,7 @@ name: Backend Deployment
 on:
   push:
     branches:
-        - team6-sujan
+        - team6-suja
 
 
 jobs:
