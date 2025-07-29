@@ -24,4 +24,3 @@ jobs:
       run: |
         chmod +x ./scripts/deploy-backend.sh
         ./scripts/deploy-backend.sh
-`
