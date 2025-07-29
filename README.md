@@ -39,7 +39,7 @@ CICD-Workshop/
 └── .github/workflows/      # CI/CD pipelines
 ```
 
-## Getting Started
+## Getting Started  
 
 ### Prerequisites
 - Node.js 20
