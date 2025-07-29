@@ -3,7 +3,7 @@ require('dotenv').config()
 
 module.exports = defineConfig({
   e2e: {
-    baseUrl: process.env.CYPRESS_BASE_URL || '${{ vars.CYPRESS_BASE_URL }}',
+    baseUrl: process.env.CYPRESS_BASE_URL,
     supportFile: 'cypress/support/e2e.js',
     specPattern: 'cypress/e2e/**/*.cy.{js,jsx,ts,tsx}',
     video: true,
@@ -11,7 +11,7 @@ module.exports = defineConfig({
     viewportWidth: 1280,
     viewportHeight: 720,
     env: {
-      apiUrl: process.env.CYPRESS_API_URL || '${{ vars.CYPRESS_API_URL }}'
+      apiUrl: process.env.CYPRESS_API_URL,
     },
     reporter: 'cypress-multi-reporters',
     reporterOptions: {

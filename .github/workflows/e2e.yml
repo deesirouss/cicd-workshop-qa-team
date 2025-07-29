@@ -23,6 +23,9 @@ jobs:
     name: Run Cypress E2E Tests
     # if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
+    env:
+      CYPRESS_BASE_URL: ${{ vars.CYPRESS_BASE_URL }}
+      CYPRESS_API_URL: ${{ vars.CYPRESS_API_URL }}
 
     steps:
       - name: Checkout Code
