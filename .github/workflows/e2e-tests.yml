@@ -5,6 +5,7 @@ on:
     types: [completed]
     branches: 
      - team3-nikesh
+     - main
 
 jobs:
   e2e-tests:

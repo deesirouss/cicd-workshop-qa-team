@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - team3-nikesh
+      - main
 
 jobs:
   deploy:
