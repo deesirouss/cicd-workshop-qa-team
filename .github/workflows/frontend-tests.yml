@@ -1,10 +1,10 @@
-  name: Frontend Tests
+name: Frontend Tests
+on:
+  push:
+    branches: team2-lasata
 
-  on:
-    push:
-      branches: [ team2-lasata ]
 
-  jobs:
+jobs:
   test:
     runs-on: ubuntu-latest
     
