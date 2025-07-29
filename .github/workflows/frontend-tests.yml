@@ -1,8 +1,7 @@
 name: Frontend Tests
 on:
   push:
-    branches: team2-lasata
-
+    branches: main
 
 jobs:
   test:
