@@ -12,7 +12,6 @@ function App() {
   useEffect(() => {
     console.log("🚀 App: Initializing user management application");
     console.log("trigger deploy");
-    console.log("TEst");
 
     loadUsers();
   }, []);
