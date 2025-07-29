@@ -2,9 +2,9 @@ name: Cypress Tests
 
 on:
   workflow_run:
-    workflow: ['Frontend Deployement']
-    type:
-      - completed   
+    workflows: ['Frontend Deployment'] 
+    types:
+      - completed 
 
 jobs:
   test:

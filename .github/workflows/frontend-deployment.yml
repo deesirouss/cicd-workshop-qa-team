@@ -1,4 +1,4 @@
-name: Frontend Deployement
+name: Frontend Deployment
 
 on:
   pull_request:
