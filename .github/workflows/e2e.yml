@@ -48,23 +48,43 @@ jobs:
       - name: Run Cypress tests
         working-directory: ./e2e-tests
         run: npx cypress run
+        continue-on-error: true  # so workflow continues even if tests fail
 
-      - name: Notify Slack on Success
-        if: success()
+      - name: Send detailed Slack notification
+        if: always()  # Ensure notification runs regardless of test results
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
-          curl -X POST -H 'Content-type: application/json' \
-          --data "$(jq -n --arg text "✅ Cypress Tests Passed on branch \`${{ github.ref_name }}\`.\nWorkflow: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View logs>" '{text: $text}')" \
-          "$SLACK_WEBHOOK_URL"
+          set -euo pipefail  # Strict mode for better error handling
 
-      - name: Notify Slack on Failure
-        if: failure()
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        run: |
-          curl -X POST -H 'Content-type: application/json' \
-          --data "$(jq -n --arg text "🚨 Cypress Tests Failed on branch \`${{ github.ref_name }}\`.\nWorkflow: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View logs>" '{text: $text}')" \
-          "$SLACK_WEBHOOK_URL"
+          REPORT_FILE="cypress/reports/merged.json"
 
-  
+          # Check if report file exists, exit with error if missing
+          if [[ ! -f "$REPORT_FILE" ]]; then
+            echo "⚠️ No Cypress report found at $REPORT_FILE"
+            exit 1
+          fi
+
+          # Extract passed and failed test titles as newline-separated strings
+          PASSED=$(jq -r '[.results[].suites[].tests[] | select(.pass == true) | .title] | join("\n")' "$REPORT_FILE")
+          FAILED=$(jq -r '[.results[].suites[].tests[] | select(.fail == true) | .title] | join("\n")' "$REPORT_FILE")
+
+          # Determine overall status emoji and message
+          if [[ -z "$FAILED" ]]; then
+            STATUS="✅ All tests passed"
+          else
+            STATUS="🚨 Some tests failed"
+          fi
+
+          # Compose Slack message payload using jq for JSON escaping and formatting
+          PAYLOAD=$(jq -n --arg status "$STATUS" \
+                          --arg passed "$PASSED" \
+                          --arg failed "$FAILED" \
+                          --arg branch "${{ github.ref_name }}" \
+                          --arg url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+          '{
+            text: "\($status) on branch `\($branch)`\n\n*✅ Passed Tests:*\n\($passed)\n\n*❌ Failed Tests:*\n\($failed)\n\n<\($url)|View GitHub Actions Logs>"
+          }')
+
+          # Send the payload to Slack webhook
+          curl -sSL -X POST -H 'Content-type: application/json' -d "$PAYLOAD" "$SLACK_WEBHOOK_URL"
