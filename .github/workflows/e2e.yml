@@ -1,11 +1,16 @@
 name: Cypress Tests
 
+# on:
+#   workflow_run:
+#     workflows: 
+#       - Frontend Deployment
+#     types:
+#       - completed
+
 on:
-  workflow_run:
-    workflows: 
-      - Frontend Deployment
-    types:
-      - completed
+  push:
+    branches:
+      - team6-sufi
 
 jobs:
   test:
@@ -35,10 +40,10 @@ jobs:
         working-directory: ./e2e-tests
         run: npx cypress run
 
-      # - name: Notify Slack on Failure
-      #   if: failure()
-      #   run: |
-      #     curl -X POST -H 'Content-type: application/json' \
-      #     --data '{
-      #       "text": "🚨 Cypress Tests Failed on branch `${{ github.ref_name }}`.\nWorkflow: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View logs>"
-      #     }' ${{ secrets.SLACK_WEBHOOK_URL }}
+      - name: Notify Slack on Failure
+        if: failure()
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+          --data '{
+            "text": "🚨 Cypress Tests Failed on branch `${{ github.ref_name }}`.\nWorkflow: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View logs>"
+          }' ${{ secrets.SLACK_WEBHOOK_URL }}
