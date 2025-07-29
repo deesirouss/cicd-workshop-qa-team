@@ -22,6 +22,7 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1   
       
+    - name: Run frontend deployment script
       run: |
         chmod +x ./scripts/deploy-frontend.sh
         ./scripts/deploy-frontend.sh
