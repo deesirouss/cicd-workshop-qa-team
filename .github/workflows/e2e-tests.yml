@@ -1,9 +1,10 @@
-name: Frontend Tests
-on:
-  push:
-    branches: 
-    - team6-sufi
+name: Cypress Tests
 
+on:
+  workflow_run:
+    workflow: ['Frontend Deployement']
+    type:
+      - completed   
 
 jobs:
   test:
@@ -33,3 +34,4 @@ jobs:
     - name: Run all tests with coverage
       working-directory: ./frontend
       run: npm test
+
