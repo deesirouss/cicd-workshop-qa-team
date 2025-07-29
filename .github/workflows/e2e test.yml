@@ -5,7 +5,7 @@ on:
     workflows: 
       - Frontend Deployment
     types:
-      - completed
+      - failure
 
 jobs:
   test:
