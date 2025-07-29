@@ -43,3 +43,55 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_DEFAULT_REGION: us-east-1
       run: aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
+
+    - name: Wait for deployment to be ready
+      run: |
+        echo "⏳ Waiting for CloudFront invalidation to complete..."
+        echo "🔍 Testing frontend availability..."
+        for i in {1..10}; do
+          if curl -s -f "${{ secrets.FRONTEND_URL }}" > /dev/null; then
+            echo "✅ Frontend is accessible!"
+            break
+          fi
+          echo "⏳ Attempt $i/10 - waiting 30 seconds..."
+          sleep 30
+        done
+
+    - name: Install Cypress dependencies
+      working-directory: ./e2e-tests
+      run: npm ci
+
+    - name: Run Cypress E2E Tests
+      working-directory: ./e2e-tests
+      run: npm run cy:run
+      env:
+        CYPRESS_BASE_URL: ${{ secrets.FRONTEND_URL }}
+        CYPRESS_API_URL: ${{ secrets.BACKEND_API_URL }}
+
+    - name: Upload Cypress Screenshots
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: cypress-screenshots
+        path: e2e-tests/cypress/screenshots
+
+    - name: Upload Cypress Videos
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: cypress-videos
+        path: e2e-tests/cypress/videos
+
+    - name: Send Slack notification on success
+      if: success()
+      run: |
+        curl -X POST -H 'Content-type: application/json' \
+        --data '{"text":"✅ Frontend Deployment & E2E Tests Successful! 🎉\n📍 Branch: team6-yagya\n🌐 Frontend: ${{ secrets.FRONTEND_URL }}\n🔗 Backend: ${{ secrets.BACKEND_API_URL }}\n✨ New Feature: User Statistics Dashboard added!"}' \
+        ${{ secrets.SLACK_WEBHOOK_URL }}
+
+    - name: Send Slack notification on failure
+      if: failure()
+      run: |
+        curl -X POST -H 'Content-type: application/json' \
+        --data '{"text":"❌ Frontend Deployment or E2E Tests Failed!\n📍 Branch: team6-yagya\n🔍 Check: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\n📸 Screenshots and videos uploaded to artifacts"}' \
+        ${{ secrets.SLACK_WEBHOOK_URL }}
