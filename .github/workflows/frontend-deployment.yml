@@ -26,6 +26,8 @@ jobs:
       run: |
           cd frontend
           npm run build
+      env: 
+        REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
@@ -37,8 +39,11 @@ jobs:
     - name: Deploy to S3
       run: |
         cd frontend
-        aws s3 sync build/ s3://team6-cicdws-bucket --delete
+        aws s3 sync build/ s3://${{ secrets.S3_BUCKET_NAME }} --delete
+       
+ # team6-cicdws-bucket
 
     - name: Invalidate CloudFront cache
       run: |
-        aws cloudfront create-invalidation --distribution-id E3620MCI9GLFQX --paths "/*"
+        aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
+# E3620MCI9GLFQX
