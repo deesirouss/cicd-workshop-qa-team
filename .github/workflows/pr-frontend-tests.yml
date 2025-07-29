@@ -1,5 +1,4 @@
 name: Frontend Tests on PR
-
 on:
   pull_request:
     branches: [ main ]
