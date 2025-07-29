@@ -23,6 +23,10 @@ jobs:
         aws-region: us-east-1   
       
     - name: Run frontend deployment script
+      env:
+        S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+        CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
+
       run: |
         chmod +x ./scripts/deploy-frontend.sh
         ./scripts/deploy-frontend.sh
