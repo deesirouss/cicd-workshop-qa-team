@@ -1,4 +1,7 @@
 #!/bin/bash
+
+branch_name="${GITHUB_REF#refs/heads/}"
+
 cd frontend
 npm install
 npm run build
