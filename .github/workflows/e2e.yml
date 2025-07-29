@@ -1,22 +1,22 @@
 name: Cypress Tests
 
-# on:
-#   workflow_run:
-#     workflows: 
-#       - Frontend Deployment
-#     types:
-#       - completed
-
 on:
-  push:
-    branches:
-      - main
-      - 'team6-sufi'  
+  workflow_run:
+    workflows: 
+      - Frontend Deployment
+    types:
+      - completed
+
+# on:
+#   push:
+#     branches:
+#       - main
+#       - 'team6-sufi'  
       
-  pull_request:
-    branches:
-      - main
-      - 'team6-sufi'
+#   pull_request:
+#     branches:
+#       - main
+#       - 'team6-sufi'
 
 jobs:
   test:
