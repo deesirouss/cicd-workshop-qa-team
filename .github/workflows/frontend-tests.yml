@@ -15,16 +15,11 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '20'
-        cache: 'npm'
+        
     
     - name: Install dependencies
       working-directory: ./frontend
       run: npm install
-
-    - name: Build project
-      run: |
-          cd frontend
-          npm run build
 
     - name: Run all tests with coverage
       working-directory: ./frontend
