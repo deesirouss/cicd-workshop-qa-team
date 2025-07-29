@@ -5,8 +5,7 @@ on:
     workflows: ["Frontend Deployment","Frontend Tests"]
     types:
       - completed
-    branches: 
-      - team3-nikesh 
+    branches: [ team3-nikesh ] 
 
 jobs:
   e2e-tests:
