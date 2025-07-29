@@ -2,7 +2,7 @@ name: E2E Tests After Frontend Deployment
 
 on:
   workflow_run:
-    workflows: ["Frontend Deployment","Frontend Tests"]
+    workflows: ["Frontend Tests"]
     types:
       - completed
     branches: [ team3-nikesh ] 
