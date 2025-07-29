@@ -26,7 +26,7 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
     - name: Deploy to S3
-      run: aws s3 sync ./frontend/build s3://team5-cicdws-bucket --delete
+      run: aws s3 sync ./frontend/build s3://team6-cicdws-bucket --delete
     - name: Invalidate CloudFront Cache
       run: |
         aws cloudfront create-invalidation \
