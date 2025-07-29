@@ -45,3 +45,11 @@ jobs:
         aws cloudfront create-invalidation \
           --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
           --paths "/*"
+
+    
+    - name: Run Cypress E2E Tests
+      working-directory: ./e2e-tests
+      run: npm ci && npx cypress run
+      env:
+        CYPRESS_BASE_URL: ${{ secrets.FRONTEND_URL }}
+        CYPRESS_API_URL: ${{ secrets.REACT_APP_API_URL }}
