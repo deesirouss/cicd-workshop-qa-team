@@ -47,6 +47,7 @@ jobs:
     - name: Wait for deployment to be ready
       env:
         FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
+        BACKEND_API_URL: ${{ secrets.BACKEND_API_URL }}
       run: |
         echo "⏳ Waiting for CloudFront invalidation to complete..."
         echo "🔍 Testing frontend availability..."
@@ -58,6 +59,18 @@ jobs:
           echo "⏳ Attempt $i/10 - waiting 30 seconds..."
           sleep 30
         done
+        
+        echo "🔍 Checking backend API availability..."
+        for i in {1..15}; do
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "${BACKEND_API_URL}/health" || echo "000")
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "✅ Backend API is healthy! (HTTP $HTTP_CODE)"
+            break
+          else
+            echo "⏳ Backend not ready (HTTP $HTTP_CODE). Attempt $i/15 - waiting 20 seconds..."
+            sleep 20
+          fi
+        done
 
     - name: Install Cypress dependencies
       working-directory: ./e2e-tests
@@ -67,7 +80,7 @@ jobs:
       working-directory: ./e2e-tests
       run: npm run cy:run
       env:
-        CYPRESS_BASE_URL: ${{ env.FRONTEND_URL }}
+        CYPRESS_BASE_URL: ${{ secrets.FRONTEND_URL }}
         CYPRESS_API_URL: ${{ secrets.BACKEND_API_URL }}
 
     - name: Upload Cypress Screenshots
