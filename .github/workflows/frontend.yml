@@ -3,6 +3,8 @@ on:
   push:
     branches:
       - team5-samita
+    paths:['frontend/**', '.github/workflows/frontend.yml']
+       
 jobs:
   deploy:
     runs-on: ubuntu-latest
