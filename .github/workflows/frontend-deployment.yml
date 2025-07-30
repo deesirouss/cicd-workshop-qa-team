@@ -59,7 +59,7 @@ jobs:
 
     - name: Build application
       working-directory: ./frontend
-      run: npm run Build
+      run: npm run build
       env:
         React_APP_API_URL:${{ secrets.React_APP_API_URL }}
 

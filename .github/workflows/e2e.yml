@@ -1,4 +1,4 @@
-name: Cypress Tests
+name: Cypress E2E Tests
 
 on:
   workflow_run:
@@ -6,28 +6,11 @@ on:
       - Frontend Deployment
     types:
       - completed
-    workflow_dispatch: #see the names of the deployment
-
-    # push:
-    #   branches: [main]
-    #   paths: ['frontend/**', '.github/workflows/frontend-deployment.yml']
-
-
-# on:
-#   push:
-#     branches:
-#       - main
-#       - 'team6-sufi'  
-      
-#   pull_request:
-#     branches:
-#       - main
-#       - 'team6-sufi'
+  workflow_dispatch:
 
 jobs:
   test:
     name: Run Cypress E2E Tests
-    # if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     env:
       CYPRESS_BASE_URL: ${{ vars.CYPRESS_BASE_URL }}
@@ -37,7 +20,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: ⚙️ Set up Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -51,17 +34,22 @@ jobs:
         working-directory: ./e2e-tests
         run: npx cypress install
 
+      - name: Debug environment variables
+        run: |
+          echo "CYPRESS_BASE_URL=$CYPRESS_BASE_URL"
+          echo "CYPRESS_API_URL=$CYPRESS_API_URL"
+
       - name: Run Cypress tests
         working-directory: ./e2e-tests
-        run: npx cypress run
-        continue-on-error: true  # so workflow continues even if tests fail
+        run: npx cypress run --config baseUrl=$CYPRESS_BASE_URL
+        continue-on-error: true
 
       - name: Send Slack Notification
-        if: always()  # always run, even if previous step fails
+        if: always()
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
-          if [[ "${{ steps.cypress_run.outcome }}" == "success" ]]; then
+          if [[ "${{ steps.test.outcome }}" == "success" ]]; then
             STATUS="✅ Cypress tests passed"
           else
             STATUS="🚨 Cypress tests failed"
