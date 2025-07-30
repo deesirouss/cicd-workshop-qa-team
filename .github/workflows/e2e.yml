@@ -3,10 +3,10 @@ name: Cypress E2E Tests
 on:
   workflow_run:
     workflows:
-      - Frontend Deployment
+      - Frontend Deployment 
     types:
       - completed
-  workflow_dispatch:
+  workflow_dispatch:          # Allow manual run
 
 jobs:
   cypress-e2e:
@@ -35,32 +35,26 @@ jobs:
         working-directory: ./e2e-tests
         run: npx cypress install
 
-      - name: Run Cypress tests with Mochawesome reporter
+      - name: Debug environment variables
+        run: |
+          echo "CYPRESS_BASE_URL=$CYPRESS_BASE_URL"
+          echo "CYPRESS_API_URL=$CYPRESS_API_URL"
+
+      - name: Run Cypress tests
+        id: test
         working-directory: ./e2e-tests
-        run: |
-          npx cypress run \
-            --config baseUrl=$CYPRESS_BASE_URL \
-            --reporter mochawesome \
-            --reporter-options reportDir=cypress/reports,overwrite=false,html=true,json=true
+        run: npx cypress run --config baseUrl=$CYPRESS_BASE_URL
+        continue-on-error: true
 
-      - name: Upload Mochawesome HTML report to S3
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-        run: |
-          aws s3 cp ./e2e-tests/cypress/reports/mochawesome.html s3://team6-cicdws-bucket/team6-sufi/reports/mochawesome.html --acl public-read
-
-      - name: Parse Mochawesome JSON and send Slack notification
+      - name: Send Slack Notification
+        if: always()
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
-          PASSED=$(jq '.stats.passes' ./e2e-tests/cypress/reports/mochawesome.json)
-          FAILED=$(jq '.stats.failures' ./e2e-tests/cypress/reports/mochawesome.json)
-          TOTAL=$(jq '.stats.tests' ./e2e-tests/cypress/reports/mochawesome.json)
-          REPORT_URL="https://team6-cicdws-bucket.s3.amazonaws.com/team6-sufi/reports/mochawesome.html"
-
-          TEXT="🧪 *Test Report*\n• *Total:* $TOTAL\n• *Passed:* $PASSED\n• *Failed:* $FAILED\nFull report: <$REPORT_URL|View detailed report>"
-
-          PAYLOAD=$(jq -n --arg text "$TEXT" '{text: $text}')
+          if [[ "${{ steps.test.outcome }}" == "success" ]]; then
+            STATUS="✅ Cypress tests passed"
+          else
+            STATUS="🚨 Cypress tests failed"
+          fi
+          PAYLOAD=$(jq -n --arg text "$STATUS on branch ${{ github.ref_name }}" '{text: $text}')
           curl -sSL -X POST -H 'Content-type: application/json' -d "$PAYLOAD" "$SLACK_WEBHOOK_URL"
