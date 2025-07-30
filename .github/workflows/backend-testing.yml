@@ -30,7 +30,10 @@ jobs:
 
     - name: Run unit tests
       working-directory: ./backend
-      run: npm run test:unit
+      run: |
+        echo "🔬 Starting unit tests..."
+        npm run test:unit
+        echo "✅ Unit tests completed successfully!"
       env:
         NODE_ENV: test
 
@@ -72,17 +75,29 @@ jobs:
         cache: 'npm'
         cache-dependency-path: 'backend/package-lock.json'
 
+    - name: Install PostgreSQL client
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y postgresql-client
+
     - name: Install backend dependencies
       working-directory: ./backend
       run: npm ci
 
     - name: Wait for PostgreSQL
       run: |
-        until pg_isready -h localhost -p 5432 -U testuser; do
-          echo "⏳ Waiting for PostgreSQL..."
+        echo "🐘 Waiting for PostgreSQL to be ready..."
+        for i in {1..30}; do
+          if pg_isready -h localhost -p 5432 -U testuser; then
+            echo "✅ PostgreSQL is ready!"
+            break
+          fi
+          echo "⏳ Attempt $i/30 - waiting 2 seconds..."
           sleep 2
         done
-        echo "✅ PostgreSQL is ready!"
+        
+        # Verify connection
+        PGPASSWORD=testpassword psql -h localhost -p 5432 -U testuser -d testdb -c "SELECT version();"
 
     - name: Run database migrations
       working-directory: ./backend
