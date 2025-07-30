@@ -3,9 +3,7 @@ on:
   push:
     branches:
       - team5-samita
-    paths:
-      -'frontend/**'
-      - '.github/workflows/frontend.yml' 
+    
        
 jobs:
   deploy:
@@ -35,7 +33,7 @@ jobs:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
-        
+
     - name: Deploy to S3
       run: aws s3 sync ./frontend/build s3://team5-cicdws-bucket --delete
     - name: Invalidate CloudFront Cache

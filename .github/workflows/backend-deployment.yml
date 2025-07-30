@@ -3,6 +3,10 @@ on:
   push:
     branches:
         - team5-samita
+    paths:
+      -'backend/**'
+      - 'github/**' 
+
 
 
 jobs:
