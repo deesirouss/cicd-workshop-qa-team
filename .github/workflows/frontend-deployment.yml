@@ -1,9 +1,9 @@
 name: Frontend Deployment
 
 on:
-  pull_request:
-    branches: 
-    - main
+  # pull_request:
+  #   branches: 
+  #   - main
 
   push:
     branches:
@@ -11,7 +11,7 @@ on:
 
 jobs:
   test:
-    if: github.event_name == 'pull_request'
+    # if: github.event_name == 'pull_request'
     name: Frontend Tests
     runs-on: ubuntu-latest
     
@@ -41,7 +41,7 @@ jobs:
       run: npm test
 
   deploy-frontend:
-    if: github.event_name == 'push'
+    # if: github.event_name == 'push'
     name: Frontend Build
     runs-on: ubuntu-latest
 
