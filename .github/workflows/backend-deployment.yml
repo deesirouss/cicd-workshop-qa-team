@@ -2,7 +2,7 @@ name: Backend Deployment
 on:
   push:
     branches:
-        - team4-pranavjoshi
+      - team4-pranavjoshi
   pull_request:
       branches:
       - team4-pranavjoshi
