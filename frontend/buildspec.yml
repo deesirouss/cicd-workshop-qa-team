@@ -16,6 +16,7 @@ phases:
           echo "$(basename $CODEBUILD_WEBHOOK_HEAD_REF)"
         fi
       - echo Installing dependencies...
+      - cd frontend
       - npm install
     on-failure: ABORT
 
