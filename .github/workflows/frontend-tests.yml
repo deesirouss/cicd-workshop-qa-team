@@ -1,7 +1,7 @@
 name: Frontend Tests
 on:
   push:
-    branches: [ team1-bigin ]
+    branches: [ team4-pranavjoshi ]
 jobs:
   test:
     runs-on: ubuntu-latest
