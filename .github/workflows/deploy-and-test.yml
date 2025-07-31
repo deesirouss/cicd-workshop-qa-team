@@ -10,8 +10,8 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      CYPRESS_BASE_URL: ${{ secrets.CYPRESS_BASE_URL }}
-      CYPRESS_API_URL: ${{ secrets.CYPRESS_API_URL }}
+      CYPRESS_BASE_URL: "https://t2.cicdws.bibek-mishra.com.np/"
+      CYPRESS_API_URL: "https://t2-api.cicdws.bibek-mishra.com.np/api/"
 
     steps:
       - name: Checkout code
