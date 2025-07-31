@@ -26,12 +26,10 @@ jobs:
         with:
           working-directory: ./frontend
           browser: chrome
-          headed: false
-          record: false
 
       - name: Upload Cypress artifacts on failure
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: cypress-artifacts
           path: |
@@ -40,7 +38,7 @@ jobs:
 
       - name: Upload Mochawesome HTML report (optional)
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: mochawesome-report
           path: frontend/cypress/reports/html
