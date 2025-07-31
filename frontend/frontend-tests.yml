@@ -1,11 +1,9 @@
 version: 0.2
 
-
 phases:
   install:
     runtime-versions:
       nodejs: 20
-
 
   pre_build:
     commands:
@@ -13,12 +11,9 @@ phases:
       - cd e2e-tests
       - npm install
 
-
   build:
     commands:
       - echo "Running E2E tests..."
       - echo "CYPRESS_BASE_URL=${CYPRESS_BASE_URL}" > .env
       - echo "CYPRESS_API_URL=${CYPRESS_API_URL}" >> .env
       - npm run cypress:run
-
-
