@@ -10,7 +10,7 @@ function App() {
   const [success, setSuccess] = useState(null);
 
   useEffect(() => {
-    console.log('🚀 App: Initializing user management application');
+    console.log('🚀 App: Initializing user management applications');
     loadUsers();
   }, []);
 
