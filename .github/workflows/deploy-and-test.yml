@@ -8,6 +8,8 @@ on:
 jobs:
   cypress-run:
     runs-on: ubuntu-latest
+    env:
+      BASE_URL: https://your-live-site.com  # replace with actual live URL
 
     steps:
       - name: Checkout repository
@@ -21,4 +23,14 @@ jobs:
         uses: cypress-io/github-action@v6
         with:
           working-directory: ./frontend
-          start: ''  # No need to start local server
+          start: ''
+          config: baseUrl=${{ env.BASE_URL }}
+
+      - name: Upload Cypress Artifacts on Failure
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: cypress-artifacts
+          path: |
+            frontend/cypress/screenshots
+            frontend/cypress/videos
