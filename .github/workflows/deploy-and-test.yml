@@ -1,32 +1,34 @@
-name: Cypress E2E on Live Site
+name: Run Cypress E2E Tests on Live Site
 
 on:
   push:
     branches:
-      - main
+      - team2-geeta
 
 jobs:
-  cypress-run:
+  cypress-e2e:
     runs-on: ubuntu-latest
+
     env:
-      BASE_URL: https://your-live-site.com  # replace with actual live URL
+      CYPRESS_BASE_URL: ${{ secrets.CYPRESS_BASE_URL }}
+      CYPRESS_API_URL: ${{ CYPRESS_API_URL }}
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Install dependencies
         working-directory: ./frontend
         run: npm install
 
-      - name: Run Cypress tests on deployed site
+      - name: Run Cypress E2E tests
         uses: cypress-io/github-action@v6
         with:
           working-directory: ./frontend
           start: ''
-          config: baseUrl=${{ env.BASE_URL }}
+          browser: chrome
 
-      - name: Upload Cypress Artifacts on Failure
+      - name: Upload Cypress artifacts on failure
         if: failure()
         uses: actions/upload-artifact@v3
         with:
@@ -34,3 +36,10 @@ jobs:
           path: |
             frontend/cypress/screenshots
             frontend/cypress/videos
+
+      - name: Upload Mochawesome HTML report (optional)
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: mochawesome-report
+          path: frontend/cypress/reports/html
