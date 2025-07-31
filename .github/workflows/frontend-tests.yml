@@ -2,7 +2,7 @@ name: Frontend Tests
 on:
   push:
     branches:
-      - team2-geeta
+      - main
   
 
 jobs:
