@@ -17,28 +17,36 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: e2e-tests/node_modules
+          key: ${{ runner.os }}-e2e-node-modules-${{ hashFiles('e2e-tests/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-e2e-node-modules-
+
       - name: Install dependencies
-        working-directory: ./frontend
+        working-directory: ./e2e-tests
         run: npm ci
+
+      - name: Check Cypress installation
+        working-directory: ./e2e-tests
+        run: npx cypress --version
 
       - name: Run Cypress E2E tests
         uses: cypress-io/github-action@v6
         with:
-          working-directory: ./frontend
+          working-directory: ./e2e-tests
           browser: chrome
+          headed: false
 
       - name: Upload Cypress artifacts on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: cypress-artifacts
-          path: |
-            frontend/cypress/screenshots
-            frontend/cypress/videos
-
-      - name: Upload Mochawesome HTML report (optional)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: mochawesome-report
-          path: frontend/cypress/reports/html
