@@ -2,7 +2,7 @@ name: Frontend Deployment
 on:
   push:
     branches:
-      - team2-geeta1
+      - main
 
 jobs:
   deploy:
