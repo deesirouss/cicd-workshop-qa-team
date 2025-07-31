@@ -1,4 +1,4 @@
-name: Deploy Frontend and Run Cypress E2E Tests
+name: Deploy Frontend and Run E2E Tests
 
 on:
   push:
@@ -15,66 +15,51 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
       CLOUDFRONT_DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
-      CYPRESS_BASE_URL: "https://t2.cicdws.bibek-mishra.com.np/"
-      CYPRESS_API_URL: "https://t2-api.cicdws.bibek-mishra.com.np/api/health"
 
     steps:
-      # 1. Checkout code
-      - name: Checkout code
+      # Checkout source code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Set up Node.js
-      - name: Set up Node.js
+      # Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # 3. Install frontend dependencies
+      # Install frontend dependencies
       - name: Install frontend dependencies
         working-directory: ./frontend
-        run: npm ci
+        run: npm install
 
-      # 4. Build frontend
+      # Build frontend
       - name: Build frontend
         working-directory: ./frontend
         run: npm run build
 
-      # 5. Deploy frontend to S3
-      - name: Deploy to S3
-        run: |
-          aws s3 sync ./frontend/build s3://$S3_BUCKET_NAME --delete
+      # Deploy to S3
+      - name: Deploy frontend to S3
+        run: aws s3 sync ./frontend/build s3://$S3_BUCKET_NAME --delete
 
-      # 6. Invalidate CloudFront cache (optional)
-      - name: Invalidate CloudFront (optional)
-        if: ${{ secrets.CLOUDFRONT_DIST_ID != '' }}
+      # Invalidate CloudFront (optional)
+      - name: Invalidate CloudFront cache
+        if: ${{ env.CLOUDFRONT_DIST_ID != '' }}
         run: |
           aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_DIST_ID --paths "/*"
 
-      # 7. Cache Cypress node_modules
-      - name: Cache Cypress node_modules
-        uses: actions/cache@v4
-        with:
-          path: e2e-tests/node_modules
-          key: ${{ runner.os }}-e2e-node-modules-${{ hashFiles('e2e-tests/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-e2e-node-modules-
-
-      # 8. Install Cypress dependencies
-      - name: Install Cypress dependencies
+      # Install E2E test dependencies
+      - name: Install Cypress test dependencies
         working-directory: ./e2e-tests
-        run: npm ci
+        run: npm install
 
-      # 9. Run Cypress tests
-      - name: Run Cypress E2E tests
-        uses: cypress-io/github-action@v6
-        with:
-          working-directory: ./e2e-tests
-          browser: chrome
-          headed: false
+      # Run Cypress tests with report
+      - name: Run Cypress E2E Tests with report
+        working-directory: ./e2e-tests
+        run: npm run test:report
 
-      # 10. Upload Cypress artifacts on failure
-      - name: Upload Cypress artifacts on failure
-        if: failure()
+      # Upload test artifacts (screenshots/videos/report)
+      - name: Upload Cypress artifacts
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: cypress-artifacts
