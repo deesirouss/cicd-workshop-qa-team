@@ -11,7 +11,7 @@ jobs:
 
     env:
       CYPRESS_BASE_URL: ${{ secrets.CYPRESS_BASE_URL }}
-      CYPRESS_API_URL: ${{ CYPRESS_API_URL }}
+      CYPRESS_API_URL: ${{ secrets.CYPRESS_API_URL }}
 
     steps:
       - name: Checkout code
@@ -19,14 +19,15 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./frontend
-        run: npm install
+        run: npm ci
 
       - name: Run Cypress E2E tests
         uses: cypress-io/github-action@v6
         with:
           working-directory: ./frontend
-          start: ''
           browser: chrome
+          headed: false
+          record: false
 
       - name: Upload Cypress artifacts on failure
         if: failure()
