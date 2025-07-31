@@ -1,63 +1,22 @@
 version: 0.2
 
-env:
-  variables:
-    NODE_VERSION: "20"
 
 phases:
   install:
     runtime-versions:
       nodejs: 20
-    commands:
-      - echo "🚀 Starting E2E Tests..."
-      - echo "📅 Test started on `date`"
-      - echo "📦 Node.js version:"
-      - node --version
-      - npm --version
+
 
   pre_build:
     commands:
-      - echo "📋 Pre-build phase started"
-      
-      # Install E2E test dependencies
-      - echo "📦 Installing E2E test dependencies..."
+      - echo "Installing dependencies..."
       - cd e2e-tests
-      - npm ci
-      
-      # Set environment variables
-      - echo "🌍 Setting environment variables..."
-      - echo "CYPRESS_BASE_URL=${CYPRESS_BASE_URL}" > .env
-      - echo "CYPRESS_API_URL=${CYPRESS_API_URL}" >> .env
-      - cat .env
+      - npm install
+
 
   build:
     commands:
-      - echo "🧪 Running E2E tests..."
-      - cd e2e-tests
-      
-      # Run Cypress tests
-      - echo "🔬 Executing Cypress E2E tests..."
+      - echo "Running E2E tests..."
+      - echo "CYPRESS_BASE_URL=${CYPRESS_BASE_URL}" > .env
+      - echo "CYPRESS_API_URL=${CYPRESS_API_URL}" >> .env
       - npm run cypress:run
-      
-      # Generate test report
-      - echo "📊 Test execution completed"
-
-  post_build:
-    commands:
-      - echo "📋 Post-build phase started"
-      - cd e2e-tests
-      
-      # Generate test summary
-      - echo "✅ E2E Tests completed successfully!"
-      - echo "📅 Completed: `date`"
-
-artifacts:
-  files:
-    - 'e2e-tests/cypress/screenshots/**/*'
-    - 'e2e-tests/cypress/videos/**/*'
-    - 'e2e-tests/cypress/reports/**/*'
-  name: e2e-test-artifacts
-
-cache:
-  paths:
-    - 'e2e-tests/node_modules/**/*'
