@@ -15,8 +15,8 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
       CLOUDFRONT_DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
-      CYPRESS_BASE_URL: "https://t3.cicdws.bibek-mishra.com.np"
-      CYPRESS_API_URL: "https://t3-api.cicdws.bibek-mishra.com.np/api"
+      CYPRESS_BASE_URL: "https://t2.cicdws.bibek-mishra.com.np"
+      CYPRESS_API_URL: "https://t2-api.cicdws.bibek-mishra.com.np/api"
 
     steps:
       - name: Checkout repository
