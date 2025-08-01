@@ -53,6 +53,18 @@ jobs:
         if: ${{ env.CLOUDFRONT_DIST_ID != '' }}
         run: |
           aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_DIST_ID --paths "/*"
+      - name: Wait for Frontend to be Live
+        run: |
+          for i in {1..30}; do
+          if curl -sf https://t2.cicdws.bibek-mishra.com.np/; then
+          echo "Frontend is live!"
+          exit 0
+          fi
+          echo "Waiting for frontend..."
+          sleep 10
+          done
+          echo "Frontend did not become live in time." >&2
+          exit 1
 
       - name: Install Cypress test dependencies
         working-directory: ./e2e-tests
