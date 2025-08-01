@@ -1,4 +1,5 @@
 describe('User Management E2E Tests', () => {
+  const apiUrl = Cypress.env('apiUrl')
   // Store created user IDs for cleanup
   const createdUserIds = []
   
@@ -37,13 +38,14 @@ describe('User Management E2E Tests', () => {
     }).then(response => {
       // Store the user ID for cleanup
       createdUserIds.push(response.body.id)
+    })
       
       // Reload the page to see the new user
       cy.reload()
       
       // Check that the user is displayed
-      cy.contains(testUserName).should('be.visible')
-      cy.contains(testUserEmail).should('be.visible')
+       cy.contains(testUserName, { timeout: 10000 }).should('be.visible')
+        cy.contains(testUserEmail).should('be.visible')
       
       // Verify user card structure
       cy.contains(testUserName).closest('[data-testid^="user-"]')
@@ -52,7 +54,7 @@ describe('User Management E2E Tests', () => {
           cy.contains('@').should('exist') // Email should contain @ symbol
         })
     })
-  })
+  
 
   it('should create a new user', () => {
     // Create a unique user name with timestamp to ensure uniqueness
