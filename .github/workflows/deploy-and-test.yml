@@ -15,50 +15,57 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
       CLOUDFRONT_DIST_ID: ${{ secrets.CLOUDFRONT_DIST_ID }}
+      CYPRESS_BASE_URL: ${{ secrets.CYPRESS_BASE_URL }}
+      CYPRESS_API_URL: ${{ secrets.CYPRESS_API_URL }}
 
     steps:
-      # Checkout source code
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Setup Node
+      - name: Cache Node modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            ./frontend/node_modules
+            ./e2e-tests/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # Install frontend dependencies
       - name: Install frontend dependencies
         working-directory: ./frontend
         run: npm install
 
-      # Build frontend
       - name: Build frontend
         working-directory: ./frontend
         run: npm run build
 
-      # Deploy to S3
       - name: Deploy frontend to S3
         run: aws s3 sync ./frontend/build s3://$S3_BUCKET_NAME --delete
 
-      # Invalidate CloudFront (optional)
       - name: Invalidate CloudFront cache
         if: ${{ env.CLOUDFRONT_DIST_ID != '' }}
         run: |
           aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_DIST_ID --paths "/*"
 
-      # Install E2E test dependencies
       - name: Install Cypress test dependencies
         working-directory: ./e2e-tests
         run: npm install
 
-      # Run Cypress tests with report
       - name: Run Cypress E2E Tests with report
         working-directory: ./e2e-tests
-        run: npm run test:report
+        run: |
+          echo "CYPRESS_BASE_URL=$CYPRESS_BASE_URL" >> .env
+          echo "CYPRESS_API_URL=$CYPRESS_API_URL" >> .env
+          npm run test:report
 
-      # Upload test artifacts (screenshots/videos/report)
-      - name: Upload Cypress artifacts
+      - name: Upload Cypress artifacts (screenshots/videos/report)
         if: always()
         uses: actions/upload-artifact@v4
         with:
