@@ -32,7 +32,7 @@ describe('User Management E2E Tests', () => {
     const testUserEmail = `test-${Date.now()}@example.com`
     
     // Create user via API to ensure it exists
-    cy.request('POST', `${Cypress.env('apiUrl')}/users`, {
+    cy.request('POST', `${apiUrl}/users`, {
       name: testUserName,
       email: testUserEmail
     }).then(response => {
