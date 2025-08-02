@@ -2,12 +2,7 @@ name: Frontend Deployment
 on:
   push:
     branches:
-<<<<<<< HEAD
       - team2-geeta
-=======
-      - main
->>>>>>> main
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
