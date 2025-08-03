@@ -11,7 +11,7 @@ module.exports = defineConfig({
     viewportWidth: 1280,
     viewportHeight: 720,
     env: {
-      apiUrl: process.env.API_URL || 'http://localhost:3001', // Optional
+      apiUrl: process.env.API_URL || 'https://t1-api.cicdws.bibek-mishra.com.np/api/health', // Optional
     },
     reporter: 'cypress-mochawesome-reporter',
     reporterOptions: {

@@ -30,4 +30,7 @@ jobs:
 
       - name: Run tests
         working-directory: ./frontend
-        run: npm test
+        run: npm test 
+      - name: Print baseUrl for Cypress
+        run: echo "CYPRESS_baseUrl=$CYPRESS_baseUrl"
+
