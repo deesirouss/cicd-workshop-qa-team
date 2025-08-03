@@ -1,12 +1,10 @@
-# 📁 .github/workflows/frontend-tests.yml
-
 name: Frontend Tests
 
 on:
-  pull_request:
+  push:
     branches:
       - team1-ayush
-  push:
+  pull_request:
     branches:
       - team1-ayush
 
@@ -18,13 +16,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20
 
+      - name: Debug – list files
+        run: ls -R
+
       - name: Install dependencies
+        working-directory: ./frontend
         run: npm install
 
-      - name: Run frontend tests
+      - name: Run tests
+        working-directory: ./frontend
         run: npm test
