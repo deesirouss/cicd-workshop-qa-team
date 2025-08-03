@@ -2,11 +2,13 @@ name: Frontend Tests
 on:
   push:
     branches: [ team6-yagya ]
+    paths: ['e2e-tests/**', 'frontend/**']
 
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
+  e2e-tests:
+    runs-on:
+      - codebuild-team6-yagya-GitHub-Actions-Runner-${{ github.run_id }}-${{ github.run_attempt }}
     
     steps:
     - uses: actions/checkout@v4
@@ -32,3 +34,6 @@ jobs:
     - name: Run all tests with coverage
       working-directory: ./frontend
       run: npm test
+      env:
+        CYPRESS_BASE_URL: ${{ secrets.FRONTEND_URL }}
+        CYPRESS_API_URL: ${{ secrets.BACKEND_API_URL }}
