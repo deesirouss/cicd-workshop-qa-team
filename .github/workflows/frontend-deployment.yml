@@ -22,7 +22,7 @@ jobs:
 
     - name: Install dependencies
       working-directory: ./frontend
-      run: npm install
+      run: npm ci
 
     - name: Build application
       working-directory: ./frontend
@@ -35,14 +35,20 @@ jobs:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_DEFAULT_REGION: us-east-1
-      run: aws s3 sync frontend/build s3://${{ secrets.S3_BUCKET_NAME }}/ --delete
+      run: |
+        echo "☁️ Deploying to S3 bucket: ${{ secrets.S3_BUCKET_NAME }}"
+        aws s3 sync frontend/build s3://${{ secrets.S3_BUCKET_NAME }}/ --delete
+        echo "✅ S3 deployment completed"
 
     - name: Invalidate CloudFront
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_DEFAULT_REGION: us-east-1
-      run: aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
+      run: |
+        echo "🔄 Invalidating CloudFront distribution: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}"
+        aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
+        echo "✅ CloudFront invalidation initiated"
 
     - name: Wait for deployment to be ready
       env:
@@ -51,24 +57,24 @@ jobs:
       run: |
         echo "⏳ Waiting for CloudFront invalidation to complete..."
         echo "🔍 Testing frontend availability..."
-        for i in {1..10}; do
+        for i in {1..6}; do
           if curl -s -f "${FRONTEND_URL}" > /dev/null; then
             echo "✅ Frontend is accessible!"
             break
           fi
-          echo "⏳ Attempt $i/10 - waiting 30 seconds..."
-          sleep 30
+          echo "⏳ Attempt $i/6 - waiting 20 seconds..."
+          sleep 20
         done
         
         echo "🔍 Checking backend API availability..."
-        for i in {1..15}; do
+        for i in {1..10}; do
           HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "${BACKEND_API_URL}/health" || echo "000")
           if [ "$HTTP_CODE" = "200" ]; then
             echo "✅ Backend API is healthy! (HTTP $HTTP_CODE)"
             break
           else
-            echo "⏳ Backend not ready (HTTP $HTTP_CODE). Attempt $i/15 - waiting 20 seconds..."
-            sleep 20
+            echo "⏳ Backend not ready (HTTP $HTTP_CODE). Attempt $i/10 - waiting 15 seconds..."
+            sleep 15
           fi
         done
 
@@ -78,10 +84,21 @@ jobs:
 
     - name: Run Cypress E2E Tests
       working-directory: ./e2e-tests
-      run: npm run cy:run
       env:
         CYPRESS_BASE_URL: ${{ secrets.FRONTEND_URL }}
         CYPRESS_API_URL: ${{ secrets.BACKEND_API_URL }}
+      run: |
+        echo "🎯 Starting E2E tests with optimized configuration..."
+        echo "Frontend URL: ${CYPRESS_BASE_URL}"
+        echo "Backend URL: ${CYPRESS_API_URL}"
+        
+        # Run Cypress with optimized settings for faster CI execution
+        npm run cy:run -- \
+          --config video=false,screenshotOnRunFailure=false \
+          --config defaultCommandTimeout=8000,requestTimeout=10000 \
+          --config viewportWidth=1280,viewportHeight=720 \
+          --browser electron \
+          --headless
 
     - name: Upload Cypress Screenshots
       if: failure()
@@ -99,14 +116,20 @@ jobs:
 
     - name: Send Slack notification on success
       if: success()
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
+        BACKEND_API_URL: ${{ secrets.BACKEND_API_URL }}
       run: |
         curl -X POST -H 'Content-type: application/json' \
-        --data '{"text":"✅ Frontend Deployment & E2E Tests Successful! 🎉\n📍 Branch: team6-yagya\n🌐 Frontend: ${{ secrets.FRONTEND_URL }}\n🔗 Backend: ${{ secrets.BACKEND_API_URL }}\n✨ New Feature: User Statistics Dashboard added!"}' \
-        ${{ secrets.SLACK_WEBHOOK_URL }}
+        --data "{\"text\":\"✅ Frontend Deployment & E2E Tests Successful! 🎉\\n📍 Branch: ${GITHUB_REF#refs/heads/}\\n🌐 Frontend: ${FRONTEND_URL}\\n🔗 Backend: ${BACKEND_API_URL}\\n✨ New Feature: User Statistics Dashboard added!\"}" \
+        "${SLACK_WEBHOOK_URL}"
 
     - name: Send Slack notification on failure
       if: failure()
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
       run: |
         curl -X POST -H 'Content-type: application/json' \
-        --data '{"text":"❌ Frontend Deployment or E2E Tests Failed!\n📍 Branch: team6-yagya\n🔍 Check: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\n📸 Screenshots and videos uploaded to artifacts"}' \
-        ${{ secrets.SLACK_WEBHOOK_URL }}
+        --data "{\"text\":\"❌ Frontend Deployment or E2E Tests Failed!\\n📍 Branch: ${GITHUB_REF#refs/heads/}\\n🔍 Check: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\\n📸 Screenshots and videos uploaded to artifacts\"}" \
+        "${SLACK_WEBHOOK_URL}"
