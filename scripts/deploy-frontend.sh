@@ -13,7 +13,7 @@ npm run build
 
 # Sync build files to S3
 echo "Syncing files to S3 bucket $S3_BUCKET..."
-aws s3 sync ./dist s3://"$S3_BUCKET" --delete --region "$AWS_REGION"
+aws s3 sync ./frontend/dist s3://"$S3_BUCKET" --delete --region "$AWS_REGION"
 
 # Invalidate CloudFront cache
 echo "Invalidating CloudFront distribution $CLOUDFRONT_DISTRIBUTION_ID..."
