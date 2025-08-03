@@ -45,8 +45,9 @@ jobs:
       run: npm run build
 
     - name: deploy to s3
+      working-directory: ./frontend
       run: |
-        aws s3 sync ./build/ s3://${{ secrets.S3_BUCKET }}/ --delete
+        aws s3 sync build/ s3://${{ secrets.S3_BUCKET }}/ --delete
 
     - name: invalidate cloudfront cache
       run: |
