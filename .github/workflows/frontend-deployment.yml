@@ -73,6 +73,8 @@ jobs:
           npx cypress run
         env:
           CYPRESS_BASE_URL: ${{ vars.FRONTEND_URL }}
+          CYPRESS_BACKEDN_URL: ${{ vars.BACKEND_URL }}
+
 
   slack_notification:
     runs-on: ubuntu-latest

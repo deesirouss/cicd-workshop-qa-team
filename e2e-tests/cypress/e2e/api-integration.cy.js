@@ -1,5 +1,5 @@
 describe('API Integration E2E Tests', () => {
-  const apiUrl = Cypress.env('apiUrl')
+  const apiUrl = Cypress.env('BACKEND_URL')
   
   // Store created user IDs for cleanup
   const createdUserIds = []
