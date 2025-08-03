@@ -1,8 +1,12 @@
 name: Frontend Tests
 
 on:
-  push:
-    branches: team6-sujan
+  # push:
+  #   branches: team6-sujan
+
+  pull_request:
+    branches:
+      -main
 
 jobs:
   test:
