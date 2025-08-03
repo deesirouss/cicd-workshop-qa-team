@@ -60,7 +60,7 @@ jobs:
           channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
           slack-message: |
             {
-              "text": "Deployment completed successfully!"
+              "text": "✅Deployment completed successfully!"
             }
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
