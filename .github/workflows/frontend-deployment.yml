@@ -3,7 +3,7 @@ name: Frontend Deployment
 on:
   workflow_run:
     workflows:
-      - Frontend Test  # This must exactly match your test workflow's name
+      - Frontend Test 
     types:
       - completed
   workflow_dispatch:
