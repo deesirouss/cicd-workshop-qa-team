@@ -10,8 +10,6 @@ on:
 
 jobs:
   test:
-
-    
     runs-on: codebuild-team1-ayush-github-action-runner-${{ github.run_id }}-${{ github.run_attempt }}
 
     steps:
@@ -26,39 +24,27 @@ jobs:
       - name: Debug – list files
         run: ls -R
 
-      - name: Install dependencies
+      - name: Install frontend dependencies
         working-directory: ./frontend
         run: npm install
 
-      - name: Run tests
+      - name: Run frontend tests
         working-directory: ./frontend
         run: npm test
         env:
-            CYPRESS_BASE_URL: ${{ secrets.CYPRESS_BASE_URL }}
-            CYPRESS_API_URL: ${{ secrets.REACT_APP_API_URL }} 
-      - name: Print baseUrl for Cypress
-        run: echo "CYPRESS_baseUrl=$CYPRESS_baseUrl"
+          CYPRESS_BASE_URL: ${{ secrets.CYPRESS_BASE_URL }}
+          CYPRESS_API_URL: ${{ secrets.REACT_APP_API_URL }}
 
-version: 0.2
+      - name: Install E2E dependencies
+        working-directory: ./e2e-tests
+        run: npm install
 
+      - name: Prepare E2E environment
+        working-directory: ./e2e-tests
+        run: |
+          echo "CYPRESS_BASE_URL=${{ secrets.CYPRESS_BASE_URL }}" > .env
+          echo "CYPRESS_API_URL=${{ secrets.REACT_APP_API_URL }}" >> .env
 
-phases:
-  install:
-    runtime-versions:
-      nodejs: 20
-
-
-  pre_build:
-    commands:
-      - echo "Installing dependencies..."
-      - cd e2e-tests
-      - npm install
-
-
-  build:
-    commands:
-      - echo "Running E2E tests..."
-      - echo "CYPRESS_BASE_URL=${CYPRESS_BASE_URL}" > .env
-      - echo "CYPRESS_API_URL=${CYPRESS_API_URL}" >> .env
-      - npm run cypress:run
-
+      - name: Run E2E tests
+        working-directory: ./e2e-tests
+        run: npm run cypress:run
