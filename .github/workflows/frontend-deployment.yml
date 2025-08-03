@@ -38,5 +38,5 @@ jobs:
         S3_BUCKET: ${{ secrets.S3_BUCKET }}
         CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
       run: |
-        chmod +x ./deploy-frontend.sh
-        ./deploy-frontend.sh
+        chmod +x ./scripts/deploy-frontend.sh
+        ./scripts/deploy-frontend.sh
