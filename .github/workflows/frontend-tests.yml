@@ -1,8 +1,7 @@
 name: Frontend Tests
 on:
-  push:
-    branches:
-      - team2-geeta
+  pull_request:
+    branches: [main]
   
 
 jobs:
