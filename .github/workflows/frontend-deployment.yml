@@ -54,14 +54,15 @@ jobs:
     if: always()
     
     steps:
-      - name: Send Slack Notification on success/failure
-        uses: slackapi/slack-github-action@v2.1.1
+      - name: Send Slack Notification
+        uses: slackapi/slack-github-action@v1.25.0
         with:
-          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
-          slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          method: chat.postMessage
           payload: |
             {
-              "text": "Deployment to S3 completed. Status: ${{ needs.deploy.result }}"
+            "channel": "${{ secrets.SLACK_CHANNEL_ID }}",
+            "text": "Your deployment has completed."
             }
 
 
