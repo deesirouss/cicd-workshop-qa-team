@@ -1,0 +1,30 @@
+# 📁 .github/workflows/frontend-tests.yml
+
+name: Frontend Tests
+
+on:
+  pull_request:
+    branches:
+      - team1-ayush
+  push:
+    branches:
+      - team1-ayush
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run frontend tests
+        run: npm test
