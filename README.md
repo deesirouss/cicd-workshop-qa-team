@@ -10,6 +10,7 @@ A comprehensive CI/CD workshop demonstrating best practices with React frontend,
 - **Testing**: Unit, Integration, and E2E tests with Cypress
 
 
+
 ## Project Structure
 
 ```
