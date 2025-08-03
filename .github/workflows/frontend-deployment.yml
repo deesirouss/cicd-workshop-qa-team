@@ -7,6 +7,7 @@ on:
 
 jobs:
   deploy:
+    name: Deploy Frontend
     runs-on: ubuntu-latest
 
 
@@ -48,6 +49,7 @@ jobs:
       run: aws cloudfront create-invalidation --distribution-id ${{vars.CLOUDFRONT_DISTRIBUTION_ID}} --paths "/*"
 
   cypress_run:
+    name: Run e2e Test
     runs-on: ubuntu-latest
     needs: deploy
     if: ${{ success() }}
@@ -73,22 +75,51 @@ jobs:
           npx cypress run
         env:
           CYPRESS_BASE_URL: ${{ vars.FRONTEND_URL }}
-          CYPRESS_BACKEDN_URL: ${{ vars.BACKEND_URL }}
+          CYPRESS_apiUrl: ${{ vars.BACKEND_URL }}
+
+
+  # slack_notification:
+  #   name: Send Slack Notification using App
+  #   runs-on: ubuntu-latest
+  #   needs: deploy
+  #   if: always()
+    
+  #   steps:
+  #     - name: Send Slack Notification
+  #       uses: slackapi/slack-github-action@v1.25.0
+  #       with:
+  #         channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+  #         slack-message: ✅Deployment completed successfully!
+  #       env:
+  #         SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+
 
 
   slack_notification:
+    name: Send Slack Notification
     runs-on: ubuntu-latest
     needs: deploy
     if: always()
-    
+
     steps:
-      - name: Send Slack Notification
-        uses: slackapi/slack-github-action@v1.25.0
-        with:
-          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
-          slack-message: ✅Deployment completed successfully!
+      - name: Send Slack Notification via Webhook 
+        if: ${{ needs.deploy.result == 'success' }}
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+          --data '{"text":"✅ *Frontend Deployment Successful* "}' \
+          $SLACK_WEBHOOK_URL
         env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Send Slack Notification via Webhook (Failure)
+        if: ${{ needs.deploy.result == 'failure' }}
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+          --data '{"text":"❌ *Frontend Deployment Failed* "}' \
+          $SLACK_WEBHOOK_URL
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
 
 
 
