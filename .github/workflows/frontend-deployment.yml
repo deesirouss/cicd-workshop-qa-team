@@ -57,13 +57,13 @@ jobs:
       - name: Send Slack Notification
         uses: slackapi/slack-github-action@v1.25.0
         with:
-          token: ${{ secrets.SLACK_BOT_TOKEN }}
-          method: chat.postMessage
-          payload: |
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+          slack-message: |
             {
-            "channel": "${{ secrets.SLACK_CHANNEL_ID }}",
-            "text": "Your deployment has completed."
+              "text": "✅ Deployment completed successfully!"
             }
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
 
 
 
