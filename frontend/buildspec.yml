@@ -1,0 +1,35 @@
+version: 0.2
+
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    on-failure: ABORT
+
+
+  pre_build:
+    commands:
+      - echo "Setting up environment variables..."
+      - |
+        if [ "$CODEBUILD_WEBHOOK_HEAD_REF" = "refs/heads/dev" ]; then
+          echo "dev"
+        else
+          echo "$(basename $CODEBUILD_WEBHOOK_HEAD_REF)"
+        fi
+      - echo Installing dependencies...
+      - cd frontend
+      - npm install
+    on-failure: ABORT
+
+
+  build:
+    commands:
+      - npm run test
+    on-failure: ABORT
+
+
+artifacts:
+  files:
+    - frontend/coverage/**/*
+  name: backend-artifacts
