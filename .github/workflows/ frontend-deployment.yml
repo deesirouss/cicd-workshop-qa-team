@@ -1,11 +1,11 @@
-name: Frontend Tests
+name: Frontend Deployment
 on:
   push:
     branches: team3-palistha
 
 
 jobs:
-  test:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -43,6 +43,8 @@ jobs:
     - name: Build application
       working-directory: ./frontend
       run: npm run build
+      env:
+        REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }} 
 
     - name: deploy to s3
       working-directory: ./frontend
