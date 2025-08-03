@@ -1,0 +1,22 @@
+name: Run Cypress E2E Tests Only
+
+on:
+  push:
+    branches:
+      - team2-geeta
+  workflow_dispatch:  # Allows manual trigger from GitHub UI
+
+jobs:
+  run-cypress-tests:
+    runs-on: ubuntu-latest
+
+    env:
+      CYPRESS_BASE_URL: ${{ secrets.CYPRESS_BASE_URL }}
+      CYPRESS_API_URL: ${{ secrets.CYPRESS_API_URL }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Cache Node modules
+        uses: actions/cache@v3
