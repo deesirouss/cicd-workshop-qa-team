@@ -16,4 +16,4 @@ aws ssm send-command \
     --document-name "AWS-RunShellScript" \
     --targets "[{\"Key\":\"InstanceIds\",\"Values\":[\"$EC2_INSTANCE_ID\"]}]" \
     --parameters "{\"commands\":[\"sudo su - root -c '/root/deployment/deployment_script_team6-sujan.sh'\"]}" \
-    --region "$AWS_REGIO"
+    --region "$AWS_REGION"
