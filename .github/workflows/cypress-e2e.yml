@@ -2,7 +2,8 @@ name: Cypress E2E Tests
 
 on:
   workflow_run:
-    workflows: "Frontend Deployment"  # Match the name exactly
+    workflows: 
+      - Frontend Deployment  # Match the name exactly
     types:
       - completed
   workflow_dispatch:
