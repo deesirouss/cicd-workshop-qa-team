@@ -86,5 +86,5 @@ jobs:
         CYPRESS_API_URL: https://t2-api.cicdws.bibek-mishra.com.np/api
  
 
-        #test
+        #test2
 
