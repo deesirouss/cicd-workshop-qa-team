@@ -2,7 +2,7 @@ name: Frontend Deployment
 on:
   push:
     branches:
-      - team5-samita
+      - team5-samita1
            
 jobs:
   deploy:
