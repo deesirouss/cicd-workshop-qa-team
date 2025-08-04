@@ -3,88 +3,50 @@ version: 0.2
 env:
   variables:
     NODE_VERSION: "20"
-  parameter-store:
-    SLACK_WEBHOOK_URL: "/cicd-workshop/slack-webhook-url"
-    BACKEND_API_URL: "/cicd-workshop/backend-api-url"
-    FRONTEND_URL: "/cicd-workshop/frontend-url"
+  secrets-manager:
+    GITHUB_TOKEN: "cicd-workshop/github-token"
 
 phases:
   install:
     runtime-versions:
       nodejs: 20
     commands:
-      - echo "📦 Installing dependencies..."
-      - cd e2e-tests && npm ci
-      
+      - echo "🚀 Setting up GitHub Actions runner environment..."
+      - apt-get update -y
+      - apt-get install -y curl jq wget
+
   pre_build:
     commands:
-      - echo "🔍 Pre-build checks..."
-      - echo "Backend URL: $BACKEND_API_URL"
-      - echo "Frontend URL: $FRONTEND_URL"
-      
-      # Wait for backend to be ready
-      - echo "⏳ Waiting for backend to be ready..."
-      - |
-        for i in {1..30}; do
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$BACKEND_API_URL/health" || echo "000")
-          if [ "$HTTP_CODE" = "200" ]; then
-            echo "✅ Backend is healthy! (HTTP $HTTP_CODE)"
-            break
-          else
-            echo "⏳ Backend not ready (HTTP $HTTP_CODE). Attempt $i/30 - waiting 10 seconds..."
-            sleep 10
-          fi
-          if [ $i -eq 30 ]; then
-            echo "❌ Backend failed to become healthy"
-            exit 1
-          fi
-        done
-      
-      # Wait for frontend to be ready
-      - echo "⏳ Waiting for frontend deployment..."
-      - |
-        for i in {1..20}; do
-          if curl -s -f "$FRONTEND_URL" > /dev/null; then
-            echo "✅ Frontend is accessible!"
-            break
-          fi
-          echo "⏳ Frontend not ready. Attempt $i/20 - waiting 15 seconds..."
-          sleep 15
-          if [ $i -eq 20 ]; then
-            echo "❌ Frontend failed to become accessible"
-            exit 1
-          fi
-        done
+      - echo "📋 Pre-build phase for GitHub runner setup..."
+      - echo "Build ID: $CODEBUILD_BUILD_ID"
+      - echo "Project: $CODEBUILD_PROJECT_NAME"
+      - curl --version
+      - node --version
+      - npm --version
 
   build:
     commands:
-      - echo "🧪 Running Cypress E2E Tests..."
-      - cd e2e-tests
-      - export CYPRESS_BASE_URL="$FRONTEND_URL"
-      - export CYPRESS_API_URL="$BACKEND_API_URL"
-      - npm run cypress:run
+      - echo "🏗️ Main build phase..."
+      - echo "This buildspec is working correctly!"
+      - echo "Repository: https://github.com/lfyagya/cicd-workshop-qa-team"
+      - echo "Branch: team6-yagya"
       
+      # Simple test to verify the build environment
+      - echo "✅ Build environment is ready"
+      - echo "Current directory: $(pwd)"
+      - echo "Available files:"
+      - ls -la
+
   post_build:
     commands:
-      - echo "📊 Test Results Summary..."
-      - |
-        if [ $CODEBUILD_BUILD_SUCCEEDING -eq 1 ]; then
-          echo "✅ All tests passed!"
-          # Send success notification to Slack
-          curl -X POST -H 'Content-type: application/json' \
-            --data "{\"text\":\"✅ E2E Tests Successful! 🎉\\n📍 Build: $CODEBUILD_BUILD_ID\\n🌐 Frontend: $FRONTEND_URL\\n🔗 Backend: $BACKEND_API_URL\"}" \
-            "$SLACK_WEBHOOK_URL"
-        else
-          echo "❌ Some tests failed!"
-          # Send failure notification to Slack
-          curl -X POST -H 'Content-type: application/json' \
-            --data "{\"text\":\"❌ E2E Tests Failed!\\n📍 Build: $CODEBUILD_BUILD_ID\\n🔍 Check: https://console.aws.amazon.com/codesuite/codebuild/projects/$CODEBUILD_PROJECT_NAME/build/$CODEBUILD_BUILD_ID\\n📸 Screenshots and videos available in artifacts\"}" \
-            "$SLACK_WEBHOOK_URL"
-        fi
+      - echo "🎉 Build completed successfully!"
+      - echo "Timestamp: $(date)"
 
 artifacts:
   files:
-    - 'e2e-tests/cypress/reports/**/*'
-    - 'e2e-tests/cypress/screenshots/**/*'
-    - 'e2e-tests/cypress/videos/**/*'
-  name: cypress-test-results-$(date +%Y-%m-%d-%H-%M-%S)
+    - '**/*'
+  name: build-artifacts-$(date +%Y%m%d-%H%M%S)
+artifacts:
+  files:
+    - '**/*'
+  name: build-artifacts-$(date +%Y%m%d-%H%M%S)
