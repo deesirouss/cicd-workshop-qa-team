@@ -1,0 +1,45 @@
+name: Run Cypress E2E Tests Only
+
+on:
+  push:
+    branches:
+      - team2-geeta
+  workflow_dispatch:  # Allows manual trigger from GitHub UI
+
+jobs:
+  run-cypress-tests:
+    runs-on: codebuild-team2-geeta-GitHub-Actions-Runner-${{ github.run_id }}-${{ github.run_attempt }}
+
+    env:
+      CYPRESS_BASE_URL: "https://t2.cicdws.bibek-mishra.com.np"
+      CYPRESS_API_URL: "https://t2-api.cicdws.bibek-mishra.com.np/api"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Cypress test dependencies
+        working-directory: ./e2e-tests
+        run: npm ci  # ✅ more reliable than `npm install` in CI
+
+      - name: Run Cypress tests
+        working-directory: ./e2e-tests
+        run: |
+          echo "CYPRESS_BASE_URL=$CYPRESS_BASE_URL" > .env
+          echo "CYPRESS_API_URL=$CYPRESS_API_URL" >> .env
+          npm run test:report
+
+      - name: Upload Cypress artifacts (screenshots/videos/report)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-artifacts
+          path: |
+            e2e-tests/cypress/screenshots/
+            e2e-tests/cypress/videos/
+            e2e-tests/cypress/reports/

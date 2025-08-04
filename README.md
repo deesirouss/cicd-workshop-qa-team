@@ -9,6 +9,8 @@ A comprehensive CI/CD workshop demonstrating best practices with React frontend,
 - **Database**: PostgreSQL for data persistence
 - **Testing**: Unit, Integration, and E2E tests with Cypress
 
+
+
 ## Project Structure
 
 ```
