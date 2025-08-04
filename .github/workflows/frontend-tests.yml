@@ -3,6 +3,9 @@ name: Frontend Tests
 on:
   push:
     branches: team5-samita
+  paths:
+      -'frontend/**'
+      - '.github/workflows/frontend-tests.yml'   
 
 jobs:
   test:
