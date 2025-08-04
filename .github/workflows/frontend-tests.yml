@@ -26,3 +26,5 @@ jobs:
       - name: Run all tests with coverage
         working-directory: ./frontend
         run: npm test
+        #check
+        
