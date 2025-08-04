@@ -24,12 +24,15 @@ phases:
   post_build:
     commands:
       - echo "Deploying to S3 bucket ${S3_BUCKET_NAME}"
-      - aws s3 sync frontend/build s3://${S3_BUCKET_NAME} --delete
+      - aws s3 sync build s3://${S3_BUCKET_NAME} --delete
       - echo "Invalidating CloudFront distribution ${CLOUDFRONT_DISTRIBUTION_ID}"
       - aws cloudfront create-invalidation --distribution-id ${CLOUDFRONT_DISTRIBUTION_ID} --paths "/*"
       - echo "🎉 Frontend deployed successfully to S3 + CloudFront!"
 
-artifacts:
-  files:
-    - '**/*'
-
+# post_build:
+#   commands:
+#     - echo "Deploying to S3 bucket ${S3_BUCKET_NAME}"
+#     - aws s3 sync frontend/build s3://${S3_BUCKET_NAME} --delete
+#     - echo "Invalidating CloudFront distribution ${CLOUDFRONT_DISTRIBUTION_ID}"
+#     - aws cloudfront create-invalidation --distribution-id ${CLOUDFRONT_DISTRIBUTION_ID} --paths "/*"
+#     - echo "🎉 Frontend deployed successfully to S3 + CloudFront!"
