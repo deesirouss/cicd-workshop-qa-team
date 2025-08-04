@@ -1,5 +1,6 @@
 version: 0.2
 
+
 phases:
   install:
     runtime-versions:
@@ -18,7 +19,7 @@ phases:
         fi
       - echo Installing dependencies...
       - cd frontend
-      
+      - npm install
     on-failure: ABORT
 
 
