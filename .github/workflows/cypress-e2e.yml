@@ -2,14 +2,15 @@ name: Cypress E2E Tests
 
 on:
   workflow_run:
-    workflows: ["Frontend Deploy"]   # Match the name exactly
+    workflows: ["Frontend Deployment"]  # Match the name exactly
     types:
       - completed
+  workflow_dispatch:
 
 jobs:
   e2e:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    runs-on: ubuntu-latest
+    runs-on: codebuild-team5-samita-gitHub-actions-runner-${{ github.run_id }}-${{ github.run_attempt }}
 
     env:
       CYPRESS_BASE_URL: ${{ secrets.CYPRESS_BASE_URL }}
