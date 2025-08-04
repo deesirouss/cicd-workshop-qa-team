@@ -25,26 +25,26 @@ jobs:
         run: ls -R
 
       - name: Install frontend dependencies
-        working-directory: ./frontend
+        working-directory: ../frontend
         run: npm install
 
       - name: Run frontend tests
-        working-directory: ./frontend
+        working-directory: ../frontend
         run: npm test
         env:
           CYPRESS_BASE_URL: ${{ secrets.CYPRESS_BASE_URL }}
           CYPRESS_API_URL: ${{ secrets.REACT_APP_API_URL }}
 
       - name: Install E2E dependencies
-        working-directory: ./e2e-tests
+        working-directory: ../e2e-tests
         run: npm install
 
       - name: Prepare E2E environment
-        working-directory: ./e2e-tests
+        working-directory: ../e2e-tests
         run: |
           echo "CYPRESS_BASE_URL=${{ secrets.CYPRESS_BASE_URL }}" > .env
           echo "CYPRESS_API_URL=${{ secrets.REACT_APP_API_URL }}" >> .env
 
       - name: Run E2E tests
-        working-directory: ./e2e-tests
+        working-directory: ../e2e-tests
         run: npm run cypress:run
