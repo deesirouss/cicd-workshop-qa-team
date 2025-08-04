@@ -11,7 +11,8 @@ on:
 jobs:
   cypress-e2e:
     name: Run Cypress E2E Tests
-    runs-on: ubuntu-latest
+    runs-on:
+      - codebuild-team6-sufi-GitHub-Actions-Runner-${{ github.run_id }}-${{ github.run_attempt }}
 
     env:
       CYPRESS_BASE_URL: ${{ vars.CYPRESS_BASE_URL }}
