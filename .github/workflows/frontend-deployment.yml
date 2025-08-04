@@ -29,6 +29,8 @@ jobs:
           CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
           STAGING_API_URL: ${{ secrets.STAGING_API_URL }}
           GITHUB_REF: ${{ github.ref }}
+
+          
   e2e-tests:
     needs: deploy # <-- Waits for deploy job to complete
     runs-on: ubuntu-latest
