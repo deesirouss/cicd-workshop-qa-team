@@ -8,7 +8,7 @@ on:
 
 jobs:
   run-cypress-tests:
-    runs-on: ubuntu-latest
+    runs-on: codebuild-team2-geeta-GitHub-Actions-Runner-${{ github.run_id }}-${{ github.run_attempt }}
 
     env:
       CYPRESS_BASE_URL: "https://t2.cicdws.bibek-mishra.com.np"
