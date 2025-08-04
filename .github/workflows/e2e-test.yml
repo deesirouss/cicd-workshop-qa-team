@@ -61,7 +61,7 @@ jobs:
 
       - name: Set environment variables
         run: |
-          echo "CYPRESS_BASE_URL=${{ secrets.CYPRESS_BASE_URL }}" > e2e-tests/.env
+          echo "CYPRESS_BASE_URL=https://t6.cicdws.bibek-mishra.com.np" > e2e-tests/.env
           echo "CYPRESS_API_URL=${{ secrets.CYPRESS_API_URL }}" >> e2e-tests/.env
 
       - name: Run Cypress E2E Tests
