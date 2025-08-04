@@ -1,66 +1,78 @@
 name: Frontend Deployment
 on:
   push:
+    paths:
+      - frontend/**
+      - e2e-tests/**
+      - .github/workflows/frontend-deployment.yml
     branches:
       - team4-pranavjoshi
-  pull_request:
-    branches:
-      - team4-pranavjoshi
+
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend  # Adjust the path to your frontend directory
+
+
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-
-      - name: Setup Node.js 20
-        uses: actions/setup-node@v3
-        with:
-          node-version: 20
-
-      - name: Install Frontend Dependencies
-        working-directory: ./frontend
-        run: npm ci
-
-      - name: Build React App
-        working-directory: ./frontend
-        run: npm run build
-        env:
-          REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-
-      - name: Deploy to S3
-        run: aws s3 sync ./frontend/build s3://team4-cicdws-bucket --delete
-
-      - name: Invalidate CloudFront Cache
-        run: |
-          aws cloudfront create-invalidation \
-            --distribution-id EN6ACTRCUGVWO \
-            --paths "/*"
+    - uses: actions/checkout@v4
 
 
-      - name: Install Cypress Dependencies & Run Tests
-        working-directory: ./e2e-tests
-        run: |
-          npm install
-          npx cypress run
-        env:
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
-          CYPRESS_BASE_URL: ${{ secrets.CYPRESS_BASE_URL }}
-          CYPRESS_API_URL: ${{ secrets.REACT_APP_API_URL }}
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'  # Specify the Node.js version you need
 
-      - name: Notify Slack
-        if: always()
-        run: |
-          STATUS="✅ Passed"
-          if [ "${{ job.status }}" != "success" ]; then STATUS="❌ Failed"; fi
-          curl -X POST -H 'Content-type: application/json' \
-          --data '{"text":"Cypress Tests: '"$STATUS"' on branch: '"${{ github.ref }}"'"}' \
-          ${{ secrets.SLACK_WEBHOOK }}
+
+    - name: Install Dependencies
+      run: npm install
+
+
+    - name: Run Build
+      run: npm run build
+      env:
+        REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
+     
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+
+
+    - name: Deploy to S3
+      run: |
+        aws s3 sync ./build s3://${{ secrets.S3_BUCKET_NAME }} --delete
+        aws s3 cp ./build/index.html s3://${{ secrets.S3_BUCKET_NAME }}/index.html --cache-control "no-cache"
+
+
+    - name: Invalidate CloudFront Cache
+      uses: chetan/invalidate-cloudfront-action@v2
+      env:
+        DISTRIBUTION: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} # Store your distribution ID as a secret
+        PATHS: "/*" # Invalidate all paths, or specify specific paths like "/index.html /css/*"
+
+
+      # - name: Install Cypress Dependencies & Run Tests
+      #   working-directory: ./e2e-tests
+      #   run: |
+      #     npm install
+      #     npx cypress run
+      #   env:
+      #     AWS_REGION: ${{ secrets.AWS_REGION }}
+      #     ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+      #     CYPRESS_BASE_URL: ${{ secrets.CYPRESS_BASE_URL }}
+      #     CYPRESS_API_URL: ${{ secrets.REACT_APP_API_URL }}
+
+      # - name: Notify Slack
+      #   if: always()
+      #   run: |
+      #     STATUS="✅ Passed"
+      #     if [ "${{ job.status }}" != "success" ]; then STATUS="❌ Failed"; fi
+      #     curl -X POST -H 'Content-type: application/json' \
+      #     --data '{"text":"Cypress Tests: '"$STATUS"' on branch: '"${{ github.ref }}"'"}' \
+      #     ${{ secrets.SLACK_WEBHOOK }}
