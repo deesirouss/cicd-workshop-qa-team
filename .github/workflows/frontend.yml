@@ -7,7 +7,7 @@ on:
        
 jobs:
   deploy:
-    runs-on: codebuild-team5-samita-github-actions-runner-${{ github.run_id }}-${{ github.run_attempt }}
+    runs-on: 
     steps:
     - name: Checkout Code
       uses: actions/checkout@v3
