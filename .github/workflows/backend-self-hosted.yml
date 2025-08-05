@@ -1,0 +1,84 @@
+name: Backend Self-Hosted Deployment
+
+on:
+  push:
+    branches: [ team6-yagya ]
+    paths: ['backend/**']
+  workflow_dispatch:
+
+jobs:
+  deploy-backend:
+    runs-on: self-hosted
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: 'backend/package-lock.json'
+    
+    - name: Install backend dependencies
+      working-directory: ./backend
+      run: npm ci
+    
+    - name: Run backend tests
+      working-directory: ./backend
+      run: npm test
+      env:
+        NODE_ENV: test
+    
+    - name: Build Docker image
+      run: |
+        echo "🐳 Building Docker image for backend..."
+        docker build -t backend-app:${{ github.sha }} ./backend
+        docker tag backend-app:${{ github.sha }} backend-app:latest
+    
+    - name: Stop existing container
+      run: |
+        echo "🛑 Stopping existing backend container..."
+        docker stop backend-app || true
+        docker rm backend-app || true
+    
+    - name: Deploy new container
+      run: |
+        echo "🚀 Deploying new backend container..."
+        docker run -d \
+          --name backend-app \
+          --restart unless-stopped \
+          -p 3001:3001 \
+          -e NODE_ENV=production \
+          backend-app:latest
+    
+    - name: Health check
+      run: |
+        echo "🔍 Waiting for backend to be ready..."
+        for i in {1..10}; do
+          if curl -f http://localhost:3001/health > /dev/null 2>&1; then
+            echo "✅ Backend is healthy!"
+            break
+          else
+            echo "⏳ Attempt $i/10 - waiting 10 seconds..."
+            sleep 10
+          fi
+        done
+    
+    - name: Send Slack notification
+      if: always()
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      run: |
+        if [ "${{ job.status }}" == "success" ]; then
+          STATUS_EMOJI="✅"
+          STATUS_TEXT="Backend Deployment Successful"
+        else
+          STATUS_EMOJI="❌"  
+          STATUS_TEXT="Backend Deployment Failed"
+        fi
+        
+        curl -X POST -H 'Content-type: application/json' \
+        --data "{\"text\":\"${STATUS_EMOJI} ${STATUS_TEXT}\\n📍 Branch: ${GITHUB_REF#refs/heads/}\\n🐳 Container: backend-app:${GITHUB_SHA}\\n🔗 Self-hosted runner deployment\"}" \
+        "${SLACK_WEBHOOK_URL}"

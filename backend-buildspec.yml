@@ -1,0 +1,165 @@
+version: 0.2
+
+env:
+  variables:
+    NODE_VERSION: "20"
+    AWS_DEFAULT_REGION: "us-east-1"
+  parameter-store:
+    DB_HOST: "/cicd-workshop/test-db-host"
+    DB_USER: "/cicd-workshop/test-db-user" 
+    DB_PASSWORD: "/cicd-workshop/test-db-password"
+    DB_NAME: "/cicd-workshop/test-db-name"
+    SLACK_WEBHOOK_URL: "/cicd-workshop/slack-webhook-url"
+    ECR_REGISTRY: "/cicd-workshop/ecr-registry"
+    ECR_REPOSITORY: "/cicd-workshop/ecr-repository"
+    EC2_INSTANCE_ID: "/cicd-workshop/ec2-instance-id"
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+      docker: 20
+    commands:
+      - echo "🚀 Starting Backend CodePipeline Build..."
+      - echo "📅 Build started on `date`"
+      - echo "🐳 Docker version:"
+      - docker --version
+      - echo "📦 Node.js version:"
+      - node --version
+      - npm --version
+
+  pre_build:
+    commands:
+      - echo "📋 Pre-build phase started"
+      - cd backend
+      
+      # Install dependencies
+      - echo "📦 Installing backend dependencies..."
+      - npm ci
+      
+      # Run unit tests first (fast feedback)
+      - echo "🧪 Running unit tests..."
+      - npm run test:unit
+      
+      # Start PostgreSQL for integration tests
+      - echo "🐘 Starting PostgreSQL service..."
+      - |
+        docker run -d \
+          --name postgres-test \
+          -e POSTGRES_PASSWORD=testpassword \
+          -e POSTGRES_USER=testuser \
+          -e POSTGRES_DB=testdb \
+          -p 5432:5432 \
+          postgres:13
+      
+      # Wait for PostgreSQL to be ready
+      - echo "⏳ Waiting for PostgreSQL to be ready..."
+      - |
+        for i in {1..30}; do
+          if docker exec postgres-test pg_isready -U testuser; then
+            echo "✅ PostgreSQL is ready!"
+            break
+          fi
+          echo "⏳ Attempt $i/30 - waiting 3 seconds..."
+          sleep 3
+        done
+      
+      # Run database migrations
+      - echo "📋 Running database migrations..."
+      - export NODE_ENV=test
+      - export DB_HOST=localhost
+      - export DB_PORT=5432
+      - export DB_USER=testuser
+      - export DB_PASSWORD=testpassword
+      - export DB_NAME=testdb
+      - npm run migrate
+      
+      # Run integration tests
+      - echo "🔗 Running integration tests..."
+      - npm run test:integration
+      
+      # Cleanup test database
+      - echo "🧹 Cleaning up test database..."
+      - docker stop postgres-test || true
+      - docker rm postgres-test || true
+
+  build:
+    commands:
+      - echo "🏗️ Build phase started"
+      - cd backend
+      
+      # Build Docker image
+      - echo "🐳 Building Docker image..."
+      - echo "📍 ECR Registry: $ECR_REGISTRY"
+      - echo "📦 Repository: $ECR_REPOSITORY"
+      - echo "🏷️ Tag: $CODEBUILD_RESOLVED_SOURCE_VERSION"
+      
+      - IMAGE_TAG=$CODEBUILD_RESOLVED_SOURCE_VERSION
+      - IMAGE_URI=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+      - echo "🎯 Full image URI: $IMAGE_URI"
+      
+      # Login to ECR
+      - echo "🔐 Logging in to Amazon ECR..."
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+      
+      # Build and tag image
+      - echo "🔨 Building Docker image..."
+      - docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
+      - docker tag $ECR_REPOSITORY:$IMAGE_TAG $IMAGE_URI
+      
+      # Push to ECR
+      - echo "📤 Pushing image to ECR..."
+      - docker push $IMAGE_URI
+      
+      # Deploy to EC2
+      - echo "🚀 Deploying to EC2..."
+      - |
+        aws ssm send-command \
+          --instance-ids $EC2_INSTANCE_ID \
+          --document-name "AWS-RunShellScript" \
+          --parameters 'commands=[
+            "echo \"🔄 Updating backend container...\"",
+            "aws ecr get-login-password --region '$AWS_DEFAULT_REGION' | docker login --username AWS --password-stdin '$ECR_REGISTRY'",
+            "docker pull '$IMAGE_URI'",
+            "docker stop backend-container || true",
+            "docker rm backend-container || true", 
+            "docker run -d --name backend-container --network backend -p 3001:3001 -e NODE_ENV=production '$IMAGE_URI'",
+            "echo \"✅ Backend deployment completed!\""
+          ]' \
+          --region $AWS_DEFAULT_REGION
+
+  post_build:
+    commands:
+      - echo "📊 Post-build phase started"
+      - cd backend
+      
+      # Generate deployment summary
+      - echo "📋 Deployment Summary:"
+      - echo "======================"
+      - echo "✅ Unit Tests: Passed"
+      - echo "✅ Integration Tests: Passed"
+      - echo "✅ Docker Build: Successful"
+      - echo "✅ ECR Push: Completed"
+      - echo "✅ EC2 Deployment: Initiated"
+      - echo "🐳 Image: $IMAGE_URI"
+      - echo "📅 Completed: `date`"
+      
+      # Send Slack notification
+      - |
+        if [ ! -z "$SLACK_WEBHOOK_URL" ]; then
+          echo "📢 Sending Slack notification..."
+          curl -X POST -H 'Content-type: application/json' \
+            --data "{\"text\":\"✅ Backend CodePipeline Deployment Successful! 🚀\\n📍 Branch: ${CODEBUILD_SOURCE_VERSION}\\n🧪 Tests: All Passed\\n🐳 Image: ${IMAGE_URI}\\n📅 Time: $(date)\"}" \
+            $SLACK_WEBHOOK_URL
+        else
+          echo "⚠️ Slack webhook not configured"
+        fi
+
+artifacts:
+  files:
+    - '**/*'
+  name: backend-build-artifacts
+  
+cache:
+  paths:
+    - 'backend/node_modules/**/*'

@@ -1,0 +1,153 @@
+name: Backend Testing
+
+on:
+  push:
+    branches:
+      - team6-yagya
+  pull_request:
+    branches:
+      - team6-yagya
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    name: Backend Unit Tests
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: 'backend/package-lock.json'
+
+    - name: Install backend dependencies
+      working-directory: ./backend
+      run: npm ci
+
+    - name: Run unit tests
+      working-directory: ./backend
+      run: |
+        echo "🔬 Starting unit tests..."
+        npm run test:unit
+        echo "✅ Unit tests completed successfully!"
+      env:
+        NODE_ENV: test
+
+    - name: Upload unit test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: unit-test-results
+        path: backend/coverage/
+
+  integration-tests:
+    runs-on: ubuntu-latest
+    name: Backend Integration Tests
+    needs: unit-tests
+
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_USER: testuser
+          POSTGRES_DB: testdb
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: 'backend/package-lock.json'
+
+    - name: Install PostgreSQL client
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y postgresql-client
+
+    - name: Install backend dependencies
+      working-directory: ./backend
+      run: npm ci
+
+    - name: Wait for PostgreSQL
+      run: |
+        echo "🐘 Waiting for PostgreSQL to be ready..."
+        for i in {1..30}; do
+          if pg_isready -h localhost -p 5432 -U testuser; then
+            echo "✅ PostgreSQL is ready!"
+            break
+          fi
+          echo "⏳ Attempt $i/30 - waiting 2 seconds..."
+          sleep 2
+        done
+        
+        # Verify connection
+        PGPASSWORD=testpassword psql -h localhost -p 5432 -U testuser -d testdb -c "SELECT version();"
+
+    - name: Run database migrations
+      working-directory: ./backend
+      run: npm run migrate
+      env:
+        NODE_ENV: test
+        DB_HOST: localhost
+        DB_PORT: 5432
+        DB_NAME: testdb
+        DB_USER: testuser
+        DB_PASSWORD: testpassword
+
+    - name: Run integration tests
+      working-directory: ./backend
+      run: npm run test:integration
+      env:
+        NODE_ENV: test
+        DB_HOST: localhost
+        DB_PORT: 5432
+        DB_NAME: testdb
+        DB_USER: testuser
+        DB_PASSWORD: testpassword
+        PORT: 3001
+
+    - name: Upload integration test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: integration-test-results
+        path: backend/coverage/
+
+  send-notifications:
+    runs-on: ubuntu-latest
+    name: Send Test Notifications
+    needs: [unit-tests, integration-tests]
+    if: always()
+
+    steps:
+    - name: Send Slack notification on success
+      if: needs.unit-tests.result == 'success' && needs.integration-tests.result == 'success'
+      run: |
+        curl -X POST -H 'Content-type: application/json' \
+        --data '{"text":"✅ Backend Tests Passed! 🧪\n📍 Branch: ${{ github.ref_name }}\n🔬 Unit Tests: ✅ Passed\n🔗 Integration Tests: ✅ Passed\n🚀 Ready for deployment!"}' \
+        ${{ secrets.SLACK_WEBHOOK_URL }}
+
+    - name: Send Slack notification on failure
+      if: needs.unit-tests.result == 'failure' || needs.integration-tests.result == 'failure'
+      run: |
+        UNIT_STATUS="${{ needs.unit-tests.result == 'success' && '✅' || '❌' }}"
+        INTEGRATION_STATUS="${{ needs.integration-tests.result == 'success' && '✅' || '❌' }}"
+        curl -X POST -H 'Content-type: application/json' \
+        --data "{\"text\":\"❌ Backend Tests Failed! 🚨\\n📍 Branch: ${{ github.ref_name }}\\n🔬 Unit Tests: ${UNIT_STATUS}\\n🔗 Integration Tests: ${INTEGRATION_STATUS}\\n🔍 Check: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" \
+        ${{ secrets.SLACK_WEBHOOK_URL }}

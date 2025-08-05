@@ -1,0 +1,94 @@
+version: 0.2
+
+env:
+  variables:
+    RUNNER_NAME: "codebuild-github-runner"
+    RUNNER_LABELS: "codebuild,aws,linux,x64,self-hosted"
+  secrets-manager:
+    GITHUB_TOKEN: "cicd-workshop/github-token"
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - echo "🚀 Installing GitHub Actions runner..."
+      - apt-get update -y
+      - apt-get install -y curl jq wget tar
+
+  pre_build:
+    commands:
+      - echo "📥 Downloading GitHub Actions runner..."
+      - mkdir -p /opt/actions-runner && cd /opt/actions-runner
+      
+      # Get latest runner version
+      - RUNNER_VERSION=$(curl -s https://api.github.com/repos/actions/runner/releases/latest | jq -r '.tag_name' | sed 's/v//')
+      - echo "Latest runner version: $RUNNER_VERSION"
+      
+      # Download and extract runner
+      - wget -O actions-runner-linux-x64.tar.gz "https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz"
+      - tar xzf ./actions-runner-linux-x64.tar.gz
+      
+      # Install dependencies
+      - ./bin/installdependencies.sh
+
+  build:
+    commands:
+      - echo "⚙️ Configuring GitHub Actions runner..."
+      - cd /opt/actions-runner
+      
+      # Get registration token from GitHub API
+      - |
+        REGISTRATION_TOKEN=$(curl -X POST \
+          -H "Authorization: token $GITHUB_TOKEN" \
+          -H "Accept: application/vnd.github.v3+json" \
+          https://api.github.com/repos/lfyagya/cicd-workshop-qa-team/actions/runners/registration-token \
+          | jq -r '.token')
+      
+      - echo "Got registration token: ${REGISTRATION_TOKEN:0:10}..."
+      
+      # Configure the runner
+      - |
+        ./config.sh \
+          --url https://github.com/lfyagya/cicd-workshop-qa-team \
+          --token $REGISTRATION_TOKEN \
+          --name "$RUNNER_NAME-$CODEBUILD_BUILD_ID" \
+          --work _work \
+          --labels $RUNNER_LABELS \
+          --unattended \
+          --replace \
+          --ephemeral
+      
+      - echo "✅ Runner configured successfully!"
+      
+      # Start the runner in background
+      - echo "🏃 Starting GitHub Actions runner..."
+      - nohup ./run.sh > runner.log 2>&1 &
+      - RUNNER_PID=$!
+      - echo "Runner started with PID: $RUNNER_PID"
+      
+      # Wait for runner to be ready and listen for jobs
+      - echo "⏳ Waiting for runner to be ready..."
+      - sleep 30
+      
+      # Keep the runner alive for job execution
+      - echo "🎯 Runner is ready to accept jobs!"
+      - echo "Keeping runner alive for 30 minutes..."
+      - sleep 1800  # Keep alive for 30 minutes
+
+  post_build:
+    commands:
+      - echo "🏁 Runner session completed"
+      - cd /opt/actions-runner
+      - echo "Last 50 lines of runner log:"
+      - tail -50 runner.log || echo "No runner log found"
+      
+      # Cleanup - remove the runner from GitHub
+      - echo "🧹 Cleaning up runner registration..."
+      - ./config.sh remove --token $GITHUB_TOKEN || echo "Runner cleanup completed"
+
+artifacts:
+  files:
+    - '/opt/actions-runner/runner.log'
+    - '/opt/actions-runner/_diag/**/*'
+  name: github-runner-logs-$(date +%Y%m%d-%H%M%S)
