@@ -1,30 +1,59 @@
 version: 0.2
 
+env:
+  variables:
+    NODE_ENV: production
+  parameter-store:
+    S3_BUCKET_NAME: "/cicd-workshop/s3-bucket-name"
+    CLOUDFRONT_DISTRIBUTION_ID: "/cicd-workshop/cloudfront-distribution-id"
+    REACT_APP_API_URL: "/cicd-workshop/backend-api-url"
 
 phases:
   install:
     runtime-versions:
       nodejs: 20
+    commands:
+      - echo "📦 Installing dependencies..."
+      - pip3 install awscli --upgrade
 
 
   pre_build:
     commands:
-      - echo "Installing dependencies..."
+      - echo "🔍 Pre-build validation..."
+      - echo "S3 Bucket: ${S3_BUCKET_NAME}"
+      - echo "CloudFront Distribution: ${CLOUDFRONT_DISTRIBUTION_ID}"
+      - echo "API URL: ${REACT_APP_API_URL}"
+      - echo "Installing frontend dependencies..."
       - cd frontend
-      - npm install
+      - npm ci
 
 
   build:
     commands:
-      - echo "Building Frontend application"
+      - echo "🏗️ Building Frontend application..."
+      - cd frontend
       - echo "REACT_APP_API_URL=${REACT_APP_API_URL}" > .env
       - npm run build
-
+      - echo "✅ Build completed. Contents:"
+      - ls -la build/
 
   post_build:
     commands:
-      - echo "Deploying to S3 bucket ${S3_BUCKET_NAME}"
-      - aws s3 sync build s3://${S3_BUCKET_NAME} --delete
-      - echo "Invalidating CloudFront distribution ${CLOUDFRONT_DISTRIBUTION_ID}"
+      - echo "🚀 Deploying to S3 bucket: ${S3_BUCKET_NAME}"
+      - cd frontend
+      - |
+        if [ -d "build" ] && [ "$(ls -A build)" ]; then
+          aws s3 sync build/ s3://${S3_BUCKET_NAME}/ --delete
+          echo "✅ S3 sync completed"
+        else
+          echo "❌ Build directory missing or empty"
+          exit 1
+        fi
+      - echo "🔄 Invalidating CloudFront distribution: ${CLOUDFRONT_DISTRIBUTION_ID}"
       - aws cloudfront create-invalidation --distribution-id ${CLOUDFRONT_DISTRIBUTION_ID} --paths "/*"
       - echo "🎉 Frontend deployed successfully to S3 + CloudFront!"
+
+artifacts:
+  files:
+    - 'frontend/build/**/*'
+  name: frontend-build-$(date +%Y%m%d-%H%M%S)
