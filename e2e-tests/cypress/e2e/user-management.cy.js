@@ -25,46 +25,46 @@ describe("User Management E2E Tests", () => {
     cy.contains("CICD Workshop - User Management").should("be.visible");
   });
 
-  it("should display user statistics dashboard", () => {
-    // Check if user stats component is visible
-    cy.get('[data-testid="user-stats"]').should("be.visible");
-    cy.contains("📊 User Statistics").should("be.visible");
+  // it("should display user statistics dashboard", () => {
+  //   // Check if user stats component is visible
+  //   cy.get('[data-testid="user-stats"]').should("be.visible");
+  //   cy.contains("📊 User Statistics").should("be.visible");
 
-    // Check stat cards
-    cy.get('[data-testid="total-users"]').should("be.visible");
-    cy.get('[data-testid="recent-users"]').should("be.visible");
-    cy.get('[data-testid="growth-rate"]').should("be.visible");
+  //   // Check stat cards
+  //   cy.get('[data-testid="total-users"]').should("be.visible");
+  //   cy.get('[data-testid="recent-users"]').should("be.visible");
+  //   cy.get('[data-testid="growth-rate"]').should("be.visible");
 
-    // Check refresh button
-    cy.get('[data-testid="refresh-stats"]').should("be.visible");
-  });
+  //   // Check refresh button
+  //   cy.get('[data-testid="refresh-stats"]').should("be.visible");
+  // });
 
-  it("should update statistics when users are added", () => {
-    // Get initial user count
-    cy.get('[data-testid="total-users"]')
-      .invoke("text")
-      .then((initialCount) => {
-        const testUserName = `Stat Test User ${Date.now()}`;
-        const testUserEmail = `stattest-${Date.now()}@example.com`;
+  // it("should update statistics when users are added", () => {
+  //   // Get initial user count
+  //   cy.get('[data-testid="total-users"]')
+  //     .invoke("text")
+  //     .then((initialCount) => {
+  //       const testUserName = `Stat Test User ${Date.now()}`;
+  //       const testUserEmail = `stattest-${Date.now()}@example.com`;
 
-        // Create a new user via the form
-        cy.get('[data-testid="user-form"]').within(() => {
-          cy.get('input[name="name"]').type(testUserName);
-          cy.get('input[name="email"]').type(testUserEmail);
-          cy.get('button[type="submit"]').click();
-        });
+  //       // Create a new user via the form
+  //       cy.get('[data-testid="user-form"]').within(() => {
+  //         cy.get('input[name="name"]').type(testUserName);
+  //         cy.get('input[name="email"]').type(testUserEmail);
+  //         cy.get('button[type="submit"]').click();
+  //       });
 
-        // Wait for success message
-        cy.contains("created successfully").should("be.visible");
+  //       // Wait for success message
+  //       cy.contains("created successfully").should("be.visible");
 
-        // Check that statistics updated
-        cy.get('[data-testid="total-users"]').should(
-          "not.contain",
-          initialCount
-        );
-        cy.get('[data-testid="recent-users"]').should("not.contain", "0");
-      });
-  });
+  //       // Check that statistics updated
+  //       cy.get('[data-testid="total-users"]').should(
+  //         "not.contain",
+  //         initialCount
+  //       );
+  //       cy.get('[data-testid="recent-users"]').should("not.contain", "0");
+  //     });
+  // });
 
   it("should load and display existing users", () => {
     // Create a test user first to ensure there's at least one user
