@@ -5,6 +5,7 @@ on:
       - frontend/**
       - e2e-tests/**
       - .github/workflows/cypress-e2e.yml
+      
     branches:
       - team5-samita
 
