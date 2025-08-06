@@ -1,25 +1,22 @@
-const { defineConfig } = require('cypress')
-require('dotenv').config()
+const { defineConfig } = require('cypress');
 
 module.exports = defineConfig({
   e2e: {
     baseUrl: process.env.CYPRESS_BASE_URL || 'http://localhost:3000',
+    specPattern: 'cypress/e2e/**/*.{cy.js,cy.jsx,cy.ts,cy.tsx}',
     supportFile: 'cypress/support/e2e.js',
-    specPattern: 'cypress/e2e/**/*.cy.{js,jsx,ts,tsx}',
+    videosFolder: 'cypress/videos',
+    screenshotsFolder: 'cypress/screenshots',
     video: true,
     screenshotOnRunFailure: true,
     viewportWidth: 1280,
     viewportHeight: 720,
     env: {
-      apiUrl: process.env.CYPRESS_API_URL || 'http://localhost:3001/api'
-    },
-    reporter: 'cypress-multi-reporters',
-    reporterOptions: {
-      configFile: 'reporter-config.json'
+      apiUrl: process.env.CYPRESS_API_URL || 'http://localhost:3001',
     },
     setupNodeEvents(on, config) {
-      require('cypress-mochawesome-reporter/plugin')(on);
+      // Add any event listeners or plugins setup here if needed
       return config;
-    }
-  }
-})
+    },
+  },
+});
